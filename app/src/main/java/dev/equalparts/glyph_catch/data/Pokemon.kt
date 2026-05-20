@@ -31,12 +31,18 @@ enum class EggGroup {
     WATER3, MINERAL, AMORPHOUS, WATER2, DITTO, DRAGON, NO_EGGS
 }
 
+enum class TimeOfDay {
+    DAY, NIGHT
+}
+
 /**
  * Evolution requirement definition for a [PokemonSpecies].
  */
 sealed class EvolutionRequirement {
     data class Level(val level: Int) : EvolutionRequirement()
     data class Stone(val item: Item) : EvolutionRequirement()
+    object Happiness : EvolutionRequirement()
+    data class TimeHappiness(val time: TimeOfDay) : EvolutionRequirement()
     object Trade : EvolutionRequirement()
 }
 
@@ -53,7 +59,8 @@ enum class Item {
     SUPER_ROD,
     RARE_CANDY,
     LINKING_CORD,
-    REPEL
+    REPEL,
+    SOOTHE_BELL_COOKIE
 }
 
 /**
@@ -67,6 +74,9 @@ object Pokemon {
 
     infix fun PokemonSpecies.at(level: Int) = EvolutionFrom(this, EvolutionRequirement.Level(level))
     infix fun PokemonSpecies.with(stone: Item) = EvolutionFrom(this, EvolutionRequirement.Stone(stone))
+    val PokemonSpecies.byHappiness get() = EvolutionFrom(this, EvolutionRequirement.Happiness)
+    val PokemonSpecies.byDayHappiness get() = EvolutionFrom(this, EvolutionRequirement.TimeHappiness(TimeOfDay.DAY))
+    val PokemonSpecies.byNightHappiness get() = EvolutionFrom(this, EvolutionRequirement.TimeHappiness(TimeOfDay.NIGHT))
     val PokemonSpecies.byTrade get() = EvolutionFrom(this, EvolutionRequirement.Trade)
 
     private fun add(
@@ -113,7 +123,7 @@ object Pokemon {
     val EKANS = add(23, "Ekans", Type.POISON, genderRatio = 0.5, eggGroups = listOf(EggGroup.FIELD, EggGroup.DRAGON))
     val ARBOK = add(24, "Arbok", Type.POISON, genderRatio = 0.5, eggGroups = listOf(EggGroup.FIELD, EggGroup.DRAGON), from = EKANS at 22)
     val PICHU = add(172, "Pichu", Type.ELECTRIC, genderRatio = 0.5, eggGroups = listOf(EggGroup.NO_EGGS))
-    val PIKACHU = add(25, "Pikachu", Type.ELECTRIC, genderRatio = 0.5, eggGroups = listOf(EggGroup.FIELD, EggGroup.FAIRY), from = PICHU at 30)
+    val PIKACHU = add(25, "Pikachu", Type.ELECTRIC, genderRatio = 0.5, eggGroups = listOf(EggGroup.FIELD, EggGroup.FAIRY), from = PICHU.byHappiness)
     val RAICHU = add(26, "Raichu", Type.ELECTRIC, genderRatio = 0.5, eggGroups = listOf(EggGroup.FIELD, EggGroup.FAIRY), from = PIKACHU with Item.THUNDER_STONE)
     val SANDSHREW = add(27, "Sandshrew", Type.GROUND, genderRatio = 0.5, eggGroups = listOf(EggGroup.FIELD))
     val SANDSLASH = add(28, "Sandslash", Type.GROUND, genderRatio = 0.5, eggGroups = listOf(EggGroup.FIELD), from = SANDSHREW at 22)
@@ -124,12 +134,12 @@ object Pokemon {
     val NIDORINO = add(33, "Nidorino", Type.POISON, genderRatio = 0.0, eggGroups = listOf(EggGroup.MONSTER, EggGroup.FIELD), from = NIDORAN_M at 16)
     val NIDOKING = add(34, "Nidoking", Type.POISON, Type.GROUND, genderRatio = 0.0, eggGroups = listOf(EggGroup.MONSTER, EggGroup.FIELD), from = NIDORINO with Item.MOON_STONE)
     val CLEFFA = add(173, "Cleffa", Type.FAIRY, genderRatio = 0.75, eggGroups = listOf(EggGroup.NO_EGGS))
-    val CLEFAIRY = add(35, "Clefairy", Type.FAIRY, genderRatio = 0.75, eggGroups = listOf(EggGroup.FAIRY), from = CLEFFA at 30)
+    val CLEFAIRY = add(35, "Clefairy", Type.FAIRY, genderRatio = 0.75, eggGroups = listOf(EggGroup.FAIRY), from = CLEFFA.byHappiness)
     val CLEFABLE = add(36, "Clefable", Type.FAIRY, genderRatio = 0.75, eggGroups = listOf(EggGroup.FAIRY), from = CLEFAIRY with Item.MOON_STONE)
     val VULPIX = add(37, "Vulpix", Type.FIRE, genderRatio = 0.75, eggGroups = listOf(EggGroup.FIELD))
     val NINETALES = add(38, "Ninetales", Type.FIRE, genderRatio = 0.75, eggGroups = listOf(EggGroup.FIELD), from = VULPIX with Item.FIRE_STONE)
     val IGGLYBUFF = add(174, "Igglybuff", Type.NORMAL, Type.FAIRY, genderRatio = 0.75, eggGroups = listOf(EggGroup.NO_EGGS))
-    val JIGGLYPUFF = add(39, "Jigglypuff", Type.NORMAL, Type.FAIRY, genderRatio = 0.75, eggGroups = listOf(EggGroup.FAIRY), from = IGGLYBUFF at 30)
+    val JIGGLYPUFF = add(39, "Jigglypuff", Type.NORMAL, Type.FAIRY, genderRatio = 0.75, eggGroups = listOf(EggGroup.FAIRY), from = IGGLYBUFF.byHappiness)
     val WIGGLYTUFF = add(40, "Wigglytuff", Type.NORMAL, Type.FAIRY, genderRatio = 0.75, eggGroups = listOf(EggGroup.FAIRY), from = JIGGLYPUFF with Item.MOON_STONE)
     val ZUBAT = add(41, "Zubat", Type.POISON, Type.FLYING, genderRatio = 0.5, eggGroups = listOf(EggGroup.FLYING))
     val GOLBAT = add(42, "Golbat", Type.POISON, Type.FLYING, genderRatio = 0.5, eggGroups = listOf(EggGroup.FLYING), from = ZUBAT at 22)
@@ -263,11 +273,11 @@ object Pokemon {
     val LEDIAN = add(166, "Ledian", Type.BUG, Type.FLYING, genderRatio = 0.5, eggGroups = listOf(EggGroup.BUG), from = LEDYBA at 18)
     val SPINARAK = add(167, "Spinarak", Type.BUG, Type.POISON, genderRatio = 0.5, eggGroups = listOf(EggGroup.BUG))
     val ARIADOS = add(168, "Ariados", Type.BUG, Type.POISON, genderRatio = 0.5, eggGroups = listOf(EggGroup.BUG), from = SPINARAK at 22)
-    val CROBAT = add(169, "Crobat", Type.POISON, Type.FLYING, genderRatio = 0.5, eggGroups = listOf(EggGroup.FLYING), from = GOLBAT at 30)
+    val CROBAT = add(169, "Crobat", Type.POISON, Type.FLYING, genderRatio = 0.5, eggGroups = listOf(EggGroup.FLYING), from = GOLBAT.byHappiness)
     val CHINCHOU = add(170, "Chinchou", Type.WATER, Type.ELECTRIC, genderRatio = 0.5, eggGroups = listOf(EggGroup.WATER2))
     val LANTURN = add(171, "Lanturn", Type.WATER, Type.ELECTRIC, genderRatio = 0.5, eggGroups = listOf(EggGroup.WATER2), from = CHINCHOU at 27)
     val TOGEPI = add(175, "Togepi", Type.FAIRY, genderRatio = 0.125, eggGroups = listOf(EggGroup.NO_EGGS))
-    val TOGETIC = add(176, "Togetic", Type.FAIRY, Type.FLYING, genderRatio = 0.125, eggGroups = listOf(EggGroup.FLYING, EggGroup.FAIRY), from = TOGEPI at 20)
+    val TOGETIC = add(176, "Togetic", Type.FAIRY, Type.FLYING, genderRatio = 0.125, eggGroups = listOf(EggGroup.FLYING, EggGroup.FAIRY), from = TOGEPI.byHappiness)
     val NATU = add(177, "Natu", Type.PSYCHIC, Type.FLYING, genderRatio = 0.5, eggGroups = listOf(EggGroup.FLYING))
     val XATU = add(178, "Xatu", Type.PSYCHIC, Type.FLYING, genderRatio = 0.5, eggGroups = listOf(EggGroup.FLYING), from = NATU at 25)
     val MAREEP = add(179, "Mareep", Type.ELECTRIC, genderRatio = 0.5, eggGroups = listOf(EggGroup.MONSTER, EggGroup.FIELD))
@@ -287,8 +297,8 @@ object Pokemon {
     val YANMA = add(193, "Yanma", Type.BUG, Type.FLYING, genderRatio = 0.5, eggGroups = listOf(EggGroup.BUG))
     val WOOPER = add(194, "Wooper", Type.WATER, Type.GROUND, genderRatio = 0.5, eggGroups = listOf(EggGroup.WATER1, EggGroup.FIELD))
     val QUAGSIRE = add(195, "Quagsire", Type.WATER, Type.GROUND, genderRatio = 0.5, eggGroups = listOf(EggGroup.WATER1, EggGroup.FIELD), from = WOOPER at 20)
-    val ESPEON = add(196, "Espeon", Type.PSYCHIC, genderRatio = 0.125, eggGroups = listOf(EggGroup.FIELD), from = EEVEE at 30)
-    val UMBREON = add(197, "Umbreon", Type.DARK, genderRatio = 0.125, eggGroups = listOf(EggGroup.FIELD), from = EEVEE at 30)
+    val ESPEON = add(196, "Espeon", Type.PSYCHIC, genderRatio = 0.125, eggGroups = listOf(EggGroup.FIELD), from = EEVEE.byDayHappiness)
+    val UMBREON = add(197, "Umbreon", Type.DARK, genderRatio = 0.125, eggGroups = listOf(EggGroup.FIELD), from = EEVEE.byNightHappiness)
     val MURKROW = add(198, "Murkrow", Type.DARK, Type.FLYING, genderRatio = 0.5, eggGroups = listOf(EggGroup.FLYING))
     val SLOWKING = add(199, "Slowking", Type.WATER, Type.PSYCHIC, genderRatio = 0.5, eggGroups = listOf(EggGroup.MONSTER, EggGroup.WATER1), from = SLOWPOKE.byTrade)
     val MISDREAVUS = add(200, "Misdreavus", Type.GHOST, genderRatio = 0.5, eggGroups = listOf(EggGroup.AMORPHOUS))
@@ -329,7 +339,7 @@ object Pokemon {
     val SMEARGLE = add(235, "Smeargle", Type.NORMAL, genderRatio = 0.5, eggGroups = listOf(EggGroup.FIELD))
     val HITMONTOP = add(237, "Hitmontop", Type.FIGHTING, genderRatio = 0.0, eggGroups = listOf(EggGroup.HUMAN_LIKE), from = TYROGUE at 20)
     val MILTANK = add(241, "Miltank", Type.NORMAL, genderRatio = 1.0, eggGroups = listOf(EggGroup.FIELD))
-    val BLISSEY = add(242, "Blissey", Type.NORMAL, genderRatio = 1.0, eggGroups = listOf(EggGroup.FAIRY), from = CHANSEY at 20)
+    val BLISSEY = add(242, "Blissey", Type.NORMAL, genderRatio = 1.0, eggGroups = listOf(EggGroup.FAIRY), from = CHANSEY.byHappiness)
     val RAIKOU = add(243, "Raikou", Type.ELECTRIC, genderRatio = -1.0, eggGroups = listOf(EggGroup.NO_EGGS))
     val ENTEI = add(244, "Entei", Type.FIRE, genderRatio = -1.0, eggGroups = listOf(EggGroup.NO_EGGS))
     val SUICUNE = add(245, "Suicune", Type.WATER, genderRatio = -1.0, eggGroups = listOf(EggGroup.NO_EGGS))

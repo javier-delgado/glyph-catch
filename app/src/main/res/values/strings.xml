@@ -134,7 +134,10 @@
     <string name="caught_screen_empty_title">No Pokémon caught yet</string>
     <string name="caught_screen_favorite_content_description">Favorite</string>
     <string name="caught_detail_title">POKÉMON DETAILS</string>
-    <string name="caught_detail_info_pokedex">Pokédex no.</string>
+    <string name="caught_detail_info_gender">Gender</string>
+    <string name="caught_detail_info_happiness">Happiness</string>
+    <string name="caught_detail_info_egg_groups">Egg Groups</string>
+    <string name="caught_detail_info_pokedex">Pokédex No.</string>
     <string name="caught_detail_info_appeared_on">Appeared</string>
     <string name="caught_detail_info_caught_on">Caught</string>
     <string name="caught_detail_info_screen_off_time">Screen off time ±</string>
@@ -187,6 +190,8 @@
     <string name="item_repel_description">Keeps away wild Pokémon. Does not affect species you haven\'t obtained.</string>
     <string name="item_repel_toggle_label">Use Repel</string>
     <string name="item_repel_toggle_subtitle">Fewer Pokémon will appear</string>
+    <string name="item_soothe_bell_cookie_name">Soothe Bell Cookie</string>
+    <string name="item_soothe_bell_cookie_description">A sweet treat that calms a Pokémon and makes it friendlier.</string>
     <string name="pokemon_selection_title">Choose a Pokémon</string>
     <string name="pokemon_selection_no_valid_targets">No Pokémon to use it on</string>
     <string name="item_usage_confirm_title">Use %1$s?</string>
@@ -196,6 +201,7 @@
     <string name="item_usage_success">Used %1$s!</string>
     <string name="item_usage_success_level_up">%1$s grew to level %2$d!</string>
     <string name="item_usage_success_evolution">%1$s evolved into %2$s!</string>
+    <string name="item_usage_success_happiness">%1$s is now much friendlier!</string>
     <string name="item_usage_error_no_item">You don\'t have any %1$s.</string>
     <string name="item_usage_error_invalid_target">%1$s can\'t use that item.</string>
     <string name="item_usage_error_max_level">%1$s is already at max level.</string>

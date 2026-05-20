@@ -48,7 +48,8 @@ data class CaughtPokemon(
     val isSpecialSpawn: Boolean = false,
     val isConditionalSpawn: Boolean = false,
     @ColumnInfo(defaultValue = "0") val screenOffDurationMinutes: Int = 0,
-    @ColumnInfo(defaultValue = "GENDERLESS") val gender: Gender = Gender.GENDERLESS
+    @ColumnInfo(defaultValue = "GENDERLESS") val gender: Gender = Gender.GENDERLESS,
+    @ColumnInfo(defaultValue = "0") val happiness: Int = 0
 )
 
 /**
@@ -90,6 +91,9 @@ interface PokemonDao {
     @Query("UPDATE caught_pokemon SET currentExp = :exp, level = :level WHERE id = :pokemonId")
     suspend fun updateTrainingProgress(pokemonId: String, exp: Int, level: Int)
 
+    @Query("UPDATE caught_pokemon SET happiness = :happiness WHERE id = :pokemonId")
+    suspend fun updateHappiness(pokemonId: String, happiness: Int)
+
     @Query(
         "UPDATE caught_pokemon SET speciesId = :newSpeciesId, level = :newLevel, currentExp = :newExp WHERE id = :pokemonId"
     )
@@ -100,6 +104,9 @@ interface PokemonDao {
 
     @Query("SELECT * FROM caught_pokemon ORDER BY speciesId")
     fun watchAllCaught(): Flow<List<CaughtPokemon>>
+
+    @Query("SELECT * FROM caught_pokemon")
+    suspend fun getAllCaughtList(): List<CaughtPokemon>
 
     @Query("SELECT * FROM caught_pokemon WHERE id = :pokemonId LIMIT 1")
     fun watchCaughtPokemon(pokemonId: String): Flow<CaughtPokemon?>
@@ -209,7 +216,7 @@ interface ActiveItemDao {
         ActiveItem::class,
         DebugEvent::class
     ],
-    version = 11,
+    version = 12,
     exportSchema = true,
     autoMigrations = [
         AutoMigration(from = 4, to = 5),
@@ -225,6 +232,12 @@ abstract class PokemonDatabase : RoomDatabase() {
     abstract fun debugEventDao(): DebugEventDao
 
     companion object {
+        private val MIGRATION_11_12 = object : Migration(11, 12) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE caught_pokemon ADD COLUMN happiness INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
         private val MIGRATION_10_11 = object : Migration(10, 11) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 // Add the gender column
@@ -319,7 +332,7 @@ abstract class PokemonDatabase : RoomDatabase() {
                 PokemonDatabase::class.java,
                 "pokemon.db"
             )
-                .addMigrations(MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11)
+                .addMigrations(MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12)
                 .fallbackToDestructiveMigration(false)
                 .build().also { INSTANCE = it }
         }

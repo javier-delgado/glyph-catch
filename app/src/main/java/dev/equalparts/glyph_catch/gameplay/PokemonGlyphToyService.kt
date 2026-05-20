@@ -307,7 +307,10 @@ class PokemonGlyphToyService : GlyphMatrixService("Pokemon-Glyph-Toy") {
         val result = LevelCalculator.expResult(active.level, active.exp, gainedExp) ?: return
         dao.updateTrainingProgress(active.id, result.exp, result.level)
         if (result.leveledUp) {
-            maybeTriggerEvolution(active.copy(level = result.level, exp = result.exp))
+            val levelsGained = result.level - active.level
+            val newHappiness = (active.happiness + (levelsGained * 2)).coerceAtMost(255)
+            dao.updateHappiness(active.id, newHappiness)
+            maybeTriggerEvolution(active.copy(level = result.level, exp = result.exp, happiness = newHappiness))
         }
     }
 
@@ -316,12 +319,7 @@ class PokemonGlyphToyService : GlyphMatrixService("Pokemon-Glyph-Toy") {
      */
     private suspend fun maybeTriggerEvolution(pokemon: CaughtPokemon) {
         val species = Pokemon[pokemon.speciesId] ?: return
-        val target = species.evolvesTo
-            .mapNotNull { Pokemon[it] }
-            .firstOrNull { candidate ->
-                val requirement = candidate.evolutionRequirement as? EvolutionRequirement.Level
-                requirement != null && pokemon.level >= requirement.level
-            } ?: return
+        val target = dev.equalparts.glyph_catch.util.findLevelEvolutionTarget(pokemon) ?: return
         db.pokemonDao().evolvePokemon(
             pokemonId = pokemon.id,
             newSpeciesId = target.id,
@@ -604,6 +602,19 @@ class PokemonGlyphToyService : GlyphMatrixService("Pokemon-Glyph-Toy") {
             logItemAward(Item.RARE_CANDY, "duplicate", speciesId)
         }
 
+        val allCaught = db.pokemonDao().getAllCaughtList()
+        val hasFriendshipEvolver = allCaught.any { pokemon ->
+            val species = Pokemon[pokemon.speciesId]
+            species?.evolvesTo?.any { targetId ->
+                Pokemon[targetId]?.evolutionRequirement is EvolutionRequirement.Happiness
+            } == true
+        }
+
+        if (hasFriendshipEvolver && Random.nextDouble() < SOOTHE_BELL_COOKIE_DROP_CHANCE) {
+            grantItem(Item.SOOTHE_BELL_COOKIE)
+            logItemAward(Item.SOOTHE_BELL_COOKIE, "friendship_available", speciesId)
+        }
+
         val totalCaught = db.pokemonDao().getTotalCaughtCount()
         val linkingCordGuaranteed = totalCaught > 0 && totalCaught % LINKING_CORD_MILESTONE == 0
         val linkingCordRoll = Random.nextDouble() < LINKING_CORD_DROP_CHANCE
@@ -821,6 +832,7 @@ class PokemonGlyphToyService : GlyphMatrixService("Pokemon-Glyph-Toy") {
         private const val SLEEP_BONUS_DURATION_MILLIS = 24L * 60 * 60 * 1000
         private const val EVOLUTION_STONE_DROP_CHANCE = 0.10
         private const val LINKING_CORD_DROP_CHANCE = 0.02
+        private const val SOOTHE_BELL_COOKIE_DROP_CHANCE = 0.15
         private const val LINKING_CORD_MILESTONE = 40
 
         private const val GLYPH_MATRIX_SIZE = 25 // 25x25 circular display
@@ -838,7 +850,8 @@ class PokemonGlyphToyService : GlyphMatrixService("Pokemon-Glyph-Toy") {
             Item.WATER_STONE,
             Item.THUNDER_STONE,
             Item.LEAF_STONE,
-            Item.MOON_STONE
+            Item.MOON_STONE,
+            Item.SUN_STONE
         )
     }
 }

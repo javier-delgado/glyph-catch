@@ -47,6 +47,7 @@ private data class CaughtPokemonDetailInfo(
     val level: Int,
     val experience: Int,
     val gender: dev.equalparts.glyph_catch.data.Gender,
+    val happiness: Int,
     val eggGroups: List<dev.equalparts.glyph_catch.data.EggGroup>,
     val appearedLabel: String?,
     val caughtLabel: String,
@@ -205,6 +206,7 @@ private fun CaughtPokemonSummaryCard(pokemon: CaughtPokemon) {
                 level = pokemon.level,
                 experience = pokemon.exp,
                 gender = pokemon.gender,
+                happiness = pokemon.happiness,
                 eggGroups = species?.eggGroups ?: emptyList(),
                 appearedLabel = appearedAtFormatted,
                 caughtLabel = caughtAtFormatted,
@@ -265,16 +267,20 @@ private fun CaughtPokemonInfoList(info: CaughtPokemonDetailInfo) {
                 ?: stringResource(R.string.common_unknown)
         )
         InfoRow(
-            label = "Gender",
+            label = stringResource(R.string.caught_detail_info_gender),
             value = when (info.gender) {
                 dev.equalparts.glyph_catch.data.Gender.MALE -> "Male ♂"
                 dev.equalparts.glyph_catch.data.Gender.FEMALE -> "Female ♀"
                 dev.equalparts.glyph_catch.data.Gender.GENDERLESS -> "Genderless"
             }
         )
+        InfoRow(
+            label = stringResource(R.string.caught_detail_info_happiness),
+            value = "${info.happiness}/255"
+        )
         if (info.eggGroups.isNotEmpty()) {
             InfoRow(
-                label = "Egg Groups",
+                label = stringResource(R.string.caught_detail_info_egg_groups),
                 value = info.eggGroups.joinToString { it.name.replace('_', ' ').lowercase().capitalize() }
             )
         }
