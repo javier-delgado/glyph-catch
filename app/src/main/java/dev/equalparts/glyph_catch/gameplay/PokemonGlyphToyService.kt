@@ -539,6 +539,12 @@ class PokemonGlyphToyService : GlyphMatrixService("Pokemon-Glyph-Toy") {
 
         try {
             val alreadyDiscovered = db.pokemonDao().hasPokedexEntry(spawn.pokemon.id)
+            val species = spawn.pokemon
+            val gender = when {
+                species.genderRatio == -1.0 -> dev.equalparts.glyph_catch.data.Gender.GENDERLESS
+                Random.nextDouble() < species.genderRatio -> dev.equalparts.glyph_catch.data.Gender.FEMALE
+                else -> dev.equalparts.glyph_catch.data.Gender.MALE
+            }
             val caughtPokemon = CaughtPokemon(
                 speciesId = spawn.pokemon.id,
                 spawnedAt = spawn.spawnedAtMillis,
@@ -547,7 +553,8 @@ class PokemonGlyphToyService : GlyphMatrixService("Pokemon-Glyph-Toy") {
                 screenOffDurationMinutes = spawn.screenOffDurationMinutes,
                 spawnPoolName = spawn.pool.name,
                 isSpecialSpawn = spawn.pool.name.contains("special", ignoreCase = true),
-                isConditionalSpawn = spawn.pool.name.contains("event", ignoreCase = true)
+                isConditionalSpawn = spawn.pool.name.contains("event", ignoreCase = true),
+                gender = gender
             )
             db.pokemonDao().insert(caughtPokemon)
             db.pokemonDao().recordPokedexEntry(spawn.pokemon.id)

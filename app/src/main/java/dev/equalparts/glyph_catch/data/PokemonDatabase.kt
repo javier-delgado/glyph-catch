@@ -24,6 +24,13 @@ import java.util.UUID
 import kotlinx.coroutines.flow.Flow
 
 /**
+ * Pokémon genders.
+ */
+enum class Gender {
+    MALE, FEMALE, GENDERLESS
+}
+
+/**
  * Pokémon caught by the user.
  */
 @Entity(tableName = "caught_pokemon")
@@ -40,7 +47,8 @@ data class CaughtPokemon(
     val spawnPoolName: String? = null,
     val isSpecialSpawn: Boolean = false,
     val isConditionalSpawn: Boolean = false,
-    @ColumnInfo(defaultValue = "0") val screenOffDurationMinutes: Int = 0
+    @ColumnInfo(defaultValue = "0") val screenOffDurationMinutes: Int = 0,
+    @ColumnInfo(defaultValue = "GENDERLESS") val gender: Gender = Gender.GENDERLESS
 )
 
 /**
@@ -201,7 +209,7 @@ interface ActiveItemDao {
         ActiveItem::class,
         DebugEvent::class
     ],
-    version = 10,
+    version = 11,
     exportSchema = true,
     autoMigrations = [
         AutoMigration(from = 4, to = 5),
@@ -217,6 +225,30 @@ abstract class PokemonDatabase : RoomDatabase() {
     abstract fun debugEventDao(): DebugEventDao
 
     companion object {
+        private val MIGRATION_10_11 = object : Migration(10, 11) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Add the gender column
+                db.execSQL("ALTER TABLE caught_pokemon ADD COLUMN gender TEXT NOT NULL DEFAULT 'GENDERLESS'")
+
+                // Assign random genders to existing Pokémon
+                val cursor = db.query("SELECT id, speciesId FROM caught_pokemon")
+                while (cursor.moveToNext()) {
+                    val id = cursor.getString(0)
+                    val speciesId = cursor.getInt(1)
+                    val species = Pokemon[speciesId]
+                    if (species != null && species.genderRatio != -1.0) {
+                        val gender = if (java.util.Random().nextDouble() < species.genderRatio) {
+                            Gender.FEMALE.name
+                        } else {
+                            Gender.MALE.name
+                        }
+                        db.execSQL("UPDATE caught_pokemon SET gender = '$gender' WHERE id = '$id'")
+                    }
+                }
+                cursor.close()
+            }
+        }
+
         private val MIGRATION_8_9 = object : Migration(8, 9) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL(
@@ -287,7 +319,7 @@ abstract class PokemonDatabase : RoomDatabase() {
                 PokemonDatabase::class.java,
                 "pokemon.db"
             )
-                .addMigrations(MIGRATION_8_9, MIGRATION_9_10)
+                .addMigrations(MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11)
                 .fallbackToDestructiveMigration(false)
                 .build().also { INSTANCE = it }
         }

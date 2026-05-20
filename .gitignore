@@ -41,3 +41,6 @@ nul
 
 keystore.base64
 keystore.properties
+
+# Temporary data and scripts
+tmp/
