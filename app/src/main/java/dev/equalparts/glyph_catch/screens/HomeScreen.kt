@@ -819,7 +819,7 @@ private val STARTER_STONE_GIFT_ITEMS = listOf(
 )
 private const val RECENT_CATCH_WINDOW_MILLIS = 24 * 60 * 60 * 1000L
 private const val SUPER_ROD_UNLOCK_COUNT = 15
-private const val REPEL_UNLOCK_SPECIES_COUNT = 50
+private const val REPEL_UNLOCK_SPECIES_COUNT = 20
 
 private fun CaughtPokemon.isRecent(referenceTimeMillis: Long): Boolean =
     caughtAt >= referenceTimeMillis - RECENT_CATCH_WINDOW_MILLIS
