@@ -297,20 +297,27 @@ class PokemonGlyphToyService : GlyphMatrixService("Pokemon-Glyph-Toy") {
      */
     private suspend fun applyTrainingExp(minutesOff: Int, isBedtime: Boolean) {
         val dao = db.pokemonDao()
-        val active = dao.getActiveTrainingPartner() ?: return
+        val partners = dao.getActiveTrainingPartners()
+        if (partners.isEmpty()) return
+
         val intervalBonus = if (!isBedtime && minutesOff > 0 && minutesOff % TRAINING_EXP_BONUS_INTERVAL_MINUTES == 0) {
             TRAINING_EXP_BONUS_AMOUNT
         } else {
             0
         }
-        val gainedExp = TRAINING_EXP_PER_MINUTE + intervalBonus
-        val result = LevelCalculator.expResult(active.level, active.exp, gainedExp) ?: return
-        dao.updateTrainingProgress(active.id, result.exp, result.level)
-        if (result.leveledUp) {
-            val levelsGained = result.level - active.level
-            val newHappiness = (active.happiness + (levelsGained * 2)).coerceAtMost(255)
-            dao.updateHappiness(active.id, newHappiness)
-            maybeTriggerEvolution(active.copy(level = result.level, exp = result.exp, happiness = newHappiness))
+        var gainedExp = (TRAINING_EXP_PER_MINUTE + intervalBonus) / 2
+
+        if (gainedExp <= 0) return
+
+        partners.forEach { active ->
+            val result = LevelCalculator.expResult(active.level, active.exp, gainedExp) ?: return@forEach
+            dao.updateTrainingProgress(active.id, result.exp, result.level)
+            if (result.leveledUp) {
+                val levelsGained = result.level - active.level
+                val newHappiness = (active.happiness + (levelsGained * 2)).coerceAtMost(255)
+                dao.updateHappiness(active.id, newHappiness)
+                maybeTriggerEvolution(active.copy(level = result.level, exp = result.exp, happiness = newHappiness))
+            }
         }
     }
 

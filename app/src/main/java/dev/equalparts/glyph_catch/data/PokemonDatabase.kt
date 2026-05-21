@@ -42,6 +42,7 @@ data class CaughtPokemon(
     val nickname: String? = null,
     val isFavorite: Boolean = false,
     val isTraining: Boolean = false,
+    @ColumnInfo(defaultValue = "0") val trainingSlot: Int = 0,
     @ColumnInfo(name = "currentExp") val exp: Int = 0,
     val level: Int = 1,
     val spawnPoolName: String? = null,
@@ -76,16 +77,41 @@ data class ActiveItem(
 
 @Dao
 interface PokemonDao {
-    @Query("SELECT * FROM caught_pokemon WHERE isTraining = 1 LIMIT 1")
+    @Query("SELECT * FROM caught_pokemon WHERE trainingSlot != 0 ORDER BY trainingSlot ASC")
+    fun watchTrainingPartners(): Flow<List<CaughtPokemon>>
+
+    @Query("SELECT * FROM caught_pokemon WHERE trainingSlot != 0 ORDER BY trainingSlot ASC")
+    suspend fun getActiveTrainingPartners(): List<CaughtPokemon>
+
+    @Query("SELECT * FROM caught_pokemon WHERE trainingSlot = 1 LIMIT 1")
     fun watchTrainingPartner(): Flow<CaughtPokemon?>
 
-    @Query("SELECT * FROM caught_pokemon WHERE isTraining = 1 LIMIT 1")
+    @Query("SELECT * FROM caught_pokemon WHERE trainingSlot = 1 LIMIT 1")
     suspend fun getActiveTrainingPartner(): CaughtPokemon?
+
+    @Query("UPDATE caught_pokemon SET trainingSlot = 0, isTraining = 0 WHERE trainingSlot = :slot")
+    suspend fun clearTrainingSlot(slot: Int)
+
+    @Query("UPDATE caught_pokemon SET trainingSlot = 0, isTraining = 0")
+    suspend fun clearAllTrainingPartners()
+
+    @Query("UPDATE caught_pokemon SET trainingSlot = 0, isTraining = 0 WHERE id = :pokemonId")
+    suspend fun stopTraining(pokemonId: String)
+
+    @Query("UPDATE caught_pokemon SET trainingSlot = :slot, isTraining = 1 WHERE id = :pokemonId")
+    suspend fun updateTrainingSlot(pokemonId: String, slot: Int)
+
+    @Transaction
+    suspend fun setActiveTrainingPartner(pokemonId: String, slot: Int) {
+        clearTrainingSlot(slot)
+        stopTraining(pokemonId)
+        updateTrainingSlot(pokemonId, slot)
+    }
 
     @Query("UPDATE caught_pokemon SET isTraining = 0")
     suspend fun clearTrainingPartner()
 
-    @Query("UPDATE caught_pokemon SET isTraining = CASE WHEN id = :pokemonId THEN 1 ELSE 0 END")
+    @Query("UPDATE caught_pokemon SET isTraining = CASE WHEN id = :pokemonId THEN 1 ELSE 0 END, trainingSlot = CASE WHEN id = :pokemonId THEN 1 ELSE 0 END")
     suspend fun setActiveTrainingPartner(pokemonId: String)
 
     @Query("UPDATE caught_pokemon SET currentExp = :exp, level = :level WHERE id = :pokemonId")
@@ -216,7 +242,7 @@ interface ActiveItemDao {
         ActiveItem::class,
         DebugEvent::class
     ],
-    version = 12,
+    version = 13,
     exportSchema = true,
     autoMigrations = [
         AutoMigration(from = 4, to = 5),
@@ -232,6 +258,13 @@ abstract class PokemonDatabase : RoomDatabase() {
     abstract fun debugEventDao(): DebugEventDao
 
     companion object {
+        private val MIGRATION_12_13 = object : Migration(12, 13) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE caught_pokemon ADD COLUMN trainingSlot INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("UPDATE caught_pokemon SET trainingSlot = 1 WHERE isTraining = 1")
+            }
+        }
+
         private val MIGRATION_11_12 = object : Migration(11, 12) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE caught_pokemon ADD COLUMN happiness INTEGER NOT NULL DEFAULT 0")
@@ -332,7 +365,7 @@ abstract class PokemonDatabase : RoomDatabase() {
                 PokemonDatabase::class.java,
                 "pokemon.db"
             )
-                .addMigrations(MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12)
+                .addMigrations(MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13)
                 .fallbackToDestructiveMigration(false)
                 .build().also { INSTANCE = it }
         }

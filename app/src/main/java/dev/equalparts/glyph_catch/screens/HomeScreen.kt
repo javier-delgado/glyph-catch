@@ -2,6 +2,7 @@ package dev.equalparts.glyph_catch.screens
 
 import androidx.annotation.StringRes
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -80,6 +81,7 @@ fun HomeScreen(
     onSettingsClick: () -> Unit,
     onPokemonClick: (CaughtPokemon) -> Unit,
     onPokedexClick: () -> Unit,
+    onCaughtClick: () -> Unit,
     onBagClick: () -> Unit,
     onWeatherSettingsClick: () -> Unit
 ) {
@@ -88,7 +90,7 @@ fun HomeScreen(
     val glyphToyStatusFlow = remember(preferencesManager) { preferencesManager.watchGlyphToyHasTicked() }
     val glyphToyHasTicked by glyphToyStatusFlow.collectAsStateWithLifecycle(false)
     val totalCaught by db.pokemonDao().watchTotalCaughtCount().collectAsStateWithLifecycle(0)
-    val trainingPartner by db.pokemonDao().watchTrainingPartner().collectAsStateWithLifecycle(null)
+    val trainingPartners by db.pokemonDao().watchTrainingPartners().collectAsStateWithLifecycle(emptyList())
     val superRodIndicatorFlow = remember(preferencesManager) { preferencesManager.watchSuperRodIndicator() }
     val showSuperRodIndicator by superRodIndicatorFlow.collectAsStateWithLifecycle(
         initialValue = preferencesManager.shouldShowSuperRodIndicator()
@@ -168,12 +170,11 @@ fun HomeScreen(
                     onWeatherClick = onWeatherSettingsClick
                 )
                 Spacer(modifier = Modifier.height(AppSizes.spacingMedium))
-                trainingPartner?.let {
-                    TrainingBanner(
-                        partner = it,
-                        onPartnerClick = onPokemonClick
-                    )
-                }
+                DaycareSection(
+                    trainingPartners = trainingPartners,
+                    onPartnerClick = onPokemonClick,
+                    onEmptySlotClick = onCaughtClick
+                )
                 Spacer(modifier = Modifier.height(AppSizes.spacingMedium))
                 TrainerTipCard(dailyTip = dailyTip)
                 Spacer(modifier = Modifier.height(AppSizes.spacingMedium))
@@ -375,18 +376,107 @@ private fun OnboardingCard() {
 }
 
 @Composable
-private fun TrainingBanner(partner: CaughtPokemon, onPartnerClick: (CaughtPokemon) -> Unit) {
-    val species = Pokemon[partner.speciesId]
-    val progress = LevelCalculator.progressFraction(partner.level, partner.exp).coerceIn(0.01f, 1f)
-
-    AppCard(
-        modifier = Modifier.fillMaxWidth(),
-        onClick = { onPartnerClick(partner) }
-    ) {
-        Row(
+private fun DaycareSection(
+    trainingPartners: List<CaughtPokemon>,
+    onPartnerClick: (CaughtPokemon) -> Unit,
+    onEmptySlotClick: () -> Unit
+) {
+    AppCard(modifier = Modifier.fillMaxWidth()) {
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(AppSizes.spacingMedium),
+            verticalArrangement = Arrangement.spacedBy(AppSizes.spacingSmall)
+        ) {
+            Text(
+                text = stringResource(R.string.home_training_daycare_title),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+
+            for (slot in 1..2) {
+                val partner = trainingPartners.find { it.trainingSlot == slot }
+                if (partner != null) {
+                    TrainingBanner(
+                        partner = partner,
+                        onPartnerClick = onPartnerClick,
+                        isEmbedded = true
+                    )
+                } else {
+                    EmptyTrainingBanner(
+                        slot = slot,
+                        onClick = onEmptySlotClick
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun EmptyTrainingBanner(slot: Int, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .padding(AppSizes.spacingSmall)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(AppSizes.spacingMedium),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(AppSizes.homeWeatherImageSize)
+                    .background(
+                        MaterialTheme.colorScheme.surfaceVariant,
+                        androidx.compose.foundation.shape.CircleShape
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.icon_grid_dots),
+                    contentDescription = null,
+                    modifier = Modifier.size(AppSizes.spacingLarge),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                )
+            }
+
+            Column(
+                verticalArrangement = Arrangement.spacedBy(AppSizes.spacingTiny)
+            ) {
+                Text(
+                    text = stringResource(R.string.home_training_slot_badge, slot),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(AppSizes.spacingTiny)
+                ) {
+                    Text(
+                        text = stringResource(R.string.home_training_empty_slot_desc),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TrainingBanner(partner: CaughtPokemon, onPartnerClick: (CaughtPokemon) -> Unit, isEmbedded: Boolean = false) {
+    val species = Pokemon[partner.speciesId]
+    val progress = LevelCalculator.progressFraction(partner.level, partner.exp).coerceIn(0.01f, 1f)
+
+    val content = @Composable {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(if (isEmbedded) AppSizes.spacingSmall else AppSizes.spacingMedium),
             horizontalArrangement = Arrangement.spacedBy(AppSizes.spacingMedium),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -405,9 +495,15 @@ private fun TrainingBanner(partner: CaughtPokemon, onPartnerClick: (CaughtPokemo
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(AppSizes.spacingTiny)
+                    horizontalArrangement = Arrangement.spacedBy(AppSizes.spacingTiny),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     AppBadge(text = stringResource(R.string.home_training_badge))
+                    AppBadge(
+                        text = stringResource(R.string.home_training_slot_badge, partner.trainingSlot),
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
                     PokemonLevelChip(level = partner.level)
                     PokemonExpChip(level = partner.level, exp = partner.exp)
                 }
@@ -420,6 +516,19 @@ private fun TrainingBanner(partner: CaughtPokemon, onPartnerClick: (CaughtPokemo
                     drawStopIndicator = { }
                 )
             }
+        }
+    }
+
+    if (isEmbedded) {
+        Box(modifier = Modifier.clickable { onPartnerClick(partner) }) {
+            content()
+        }
+    } else {
+        AppCard(
+            modifier = Modifier.fillMaxWidth(),
+            onClick = { onPartnerClick(partner) }
+        ) {
+            content()
         }
     }
 }

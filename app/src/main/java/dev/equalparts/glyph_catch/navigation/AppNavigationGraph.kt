@@ -55,6 +55,15 @@ fun AppNavigationGraph(navController: NavHostController, db: PokemonDatabase) {
                 onPokedexClick = {
                     navController.navigate(AppScreen.Pokedex.route)
                 },
+                onCaughtClick = {
+                    navController.navigate(AppScreen.Caught.createRoute()) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
                 onBagClick = {
                     navController.navigate(AppScreen.Inventory.route) {
                         popUpTo(navController.graph.findStartDestination().id) {

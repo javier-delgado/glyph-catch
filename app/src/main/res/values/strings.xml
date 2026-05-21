@@ -30,6 +30,10 @@
     <string name="home_section_recent_catches">Recent</string>
     <string name="home_empty_recent_catches">No Pokémon caught yet. Pokémon will appear on the Glyph Matrix when your phone is face-down. Long-press the touch button to catch!</string>
     <string name="home_training_badge">Training</string>
+    <string name="home_training_daycare_title">Daycare training</string>
+    <string name="home_training_slot_badge">Slot %1$d</string>
+    <string name="home_training_empty_slot">Empty Slot</string>
+    <string name="home_training_empty_slot_desc">Select a Pokémon to start training</string>
     <string name="home_recent_new_badge">New</string>
     <string name="home_daily_tip_label">Daily Trainer Tips</string>
     <string name="home_super_rod_new_banner">Super Rod</string>
@@ -150,6 +154,9 @@
     <string name="caught_detail_encounter_event">Event</string>
     <string name="caught_detail_empty_title">Pokémon not found</string>
     <string name="caught_detail_empty_subtitle">Try again from the caught list.</string>
+    <string name="training_slot_selection_title">Select Training Slot</string>
+    <string name="training_slot_label">Slot %1$d: %2$s (Lv. %3$d)</string>
+    <string name="training_slot_empty">Slot %1$d: Empty</string>
     <plurals name="caught_detail_screen_off_minutes">
         <item quantity="one">1 minute</item>
         <item quantity="other">%d minutes</item>

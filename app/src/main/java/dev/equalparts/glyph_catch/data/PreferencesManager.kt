@@ -110,34 +110,73 @@ class PreferencesManager(context: Context) {
         get() = prefs.getBoolean(KEY_REPEL_ACTIVE, false)
         set(value) = prefs.edit { putBoolean(KEY_REPEL_ACTIVE, value) }
 
-    var activeTrainingPartnerId: String?
-        get() = prefs.getString(KEY_ACTIVE_TRAINING_PARTNER_ID, null)
-        set(value) {
-            prefs.edit {
-                if (value == null) {
-                    remove(KEY_ACTIVE_TRAINING_PARTNER_ID)
-                } else {
-                    putString(KEY_ACTIVE_TRAINING_PARTNER_ID, value)
-                }
+    fun activeTrainingPartnerId(slot: Int): String? {
+        val key = if (slot == 2) KEY_ACTIVE_TRAINING_PARTNER_ID_2 else KEY_ACTIVE_TRAINING_PARTNER_ID
+        return prefs.getString(key, null)
+    }
+
+    private fun setActiveTrainingPartnerId(slot: Int, value: String?) {
+        val key = if (slot == 2) KEY_ACTIVE_TRAINING_PARTNER_ID_2 else KEY_ACTIVE_TRAINING_PARTNER_ID
+        prefs.edit {
+            if (value == null) {
+                remove(key)
+            } else {
+                putString(key, value)
             }
         }
+    }
+
+    fun trainingPartnerBeganAt(slot: Int): Long {
+        val key = if (slot == 2) KEY_TRAINING_PARTNER_BEGAN_AT_2 else KEY_TRAINING_PARTNER_BEGAN_AT
+        return prefs.getLong(key, 0L)
+    }
+
+    private fun setTrainingPartnerBeganAt(slot: Int, value: Long) {
+        val key = if (slot == 2) KEY_TRAINING_PARTNER_BEGAN_AT_2 else KEY_TRAINING_PARTNER_BEGAN_AT
+        prefs.edit { putLong(key, value) }
+    }
+
+    var activeTrainingPartnerId: String?
+        get() = activeTrainingPartnerId(1)
+        set(value) = setActiveTrainingPartnerId(1, value)
 
     var trainingPartnerBeganAt: Long
-        get() = prefs.getLong(KEY_TRAINING_PARTNER_BEGAN_AT, 0L)
-        set(value) = prefs.edit { putLong(KEY_TRAINING_PARTNER_BEGAN_AT, value) }
+        get() = trainingPartnerBeganAt(1)
+        set(value) = setTrainingPartnerBeganAt(1, value)
+
+    fun markTrainingPartner(slot: Int, pokemonId: String, startedAt: Long = System.currentTimeMillis()) {
+        val currentId = activeTrainingPartnerId(slot)
+        val currentBeganAt = trainingPartnerBeganAt(slot)
+        val shouldReset = currentId != pokemonId || currentBeganAt == 0L
+        setActiveTrainingPartnerId(slot, pokemonId)
+        if (shouldReset) {
+            setTrainingPartnerBeganAt(slot, startedAt)
+        }
+    }
 
     fun markTrainingPartner(pokemonId: String, startedAt: Long = System.currentTimeMillis()) {
-        val shouldReset = activeTrainingPartnerId != pokemonId || trainingPartnerBeganAt == 0L
-        activeTrainingPartnerId = pokemonId
-        if (shouldReset) {
-            trainingPartnerBeganAt = startedAt
+        markTrainingPartner(1, pokemonId, startedAt)
+    }
+
+    fun clearTrainingPartner(slot: Int) {
+        val idKey = if (slot == 2) KEY_ACTIVE_TRAINING_PARTNER_ID_2 else KEY_ACTIVE_TRAINING_PARTNER_ID
+        val beganKey = if (slot == 2) KEY_TRAINING_PARTNER_BEGAN_AT_2 else KEY_TRAINING_PARTNER_BEGAN_AT
+        prefs.edit {
+            remove(idKey)
+            remove(beganKey)
         }
     }
 
     fun clearTrainingPartner() {
+        clearTrainingPartner(1)
+    }
+
+    fun clearAllTrainingPartners() {
         prefs.edit {
             remove(KEY_ACTIVE_TRAINING_PARTNER_ID)
             remove(KEY_TRAINING_PARTNER_BEGAN_AT)
+            remove(KEY_ACTIVE_TRAINING_PARTNER_ID_2)
+            remove(KEY_TRAINING_PARTNER_BEGAN_AT_2)
         }
     }
 
@@ -377,6 +416,8 @@ class PreferencesManager(context: Context) {
         private const val KEY_LAST_SPAWN_SCREEN_OFF_MINUTES = "last_spawn_screen_off_minutes"
         private const val KEY_ACTIVE_TRAINING_PARTNER_ID = "training_partner_id"
         private const val KEY_TRAINING_PARTNER_BEGAN_AT = "training_partner_began_at"
+        private const val KEY_ACTIVE_TRAINING_PARTNER_ID_2 = "training_partner_id_2"
+        private const val KEY_TRAINING_PARTNER_BEGAN_AT_2 = "training_partner_began_at_2"
         private const val KEY_PENDING_EVOLUTIONS = "pending_evolutions"
         private const val MINUTES_PER_DAY = 24 * 60
         private const val DEFAULT_BEDTIME_MINUTES = 23 * 60

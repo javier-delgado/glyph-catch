@@ -112,6 +112,8 @@ private fun CaughtPokemonDetailContent(
 ) {
     val scope = rememberCoroutineScope()
     var isStartingTraining by remember { mutableStateOf(false) }
+    var showSlotSelection by remember { mutableStateOf(false) }
+    val trainingPartners by pokemonDao.watchTrainingPartners().collectAsStateWithLifecycle(emptyList())
 
     Column(
         modifier = modifier,
@@ -127,15 +129,7 @@ private fun CaughtPokemonDetailContent(
 
             Button(
                 onClick = {
-                    scope.launch {
-                        isStartingTraining = true
-                        try {
-                            pokemonDao.setActiveTrainingPartner(pokemon.id)
-                            preferencesManager.markTrainingPartner(pokemon.id)
-                        } finally {
-                            isStartingTraining = false
-                        }
-                    }
+                    showSlotSelection = true
                 },
                 enabled = !pokemon.isTraining && !isStartingTraining,
                 modifier = Modifier.fillMaxWidth()
@@ -152,8 +146,8 @@ private fun CaughtPokemonDetailContent(
                 OutlinedButton(
                     onClick = {
                         scope.launch {
-                            pokemonDao.clearTrainingPartner()
-                            preferencesManager.clearTrainingPartner()
+                            pokemonDao.stopTraining(pokemon.id)
+                            preferencesManager.clearTrainingPartner(pokemon.trainingSlot)
                         }
                     },
                     modifier = Modifier.fillMaxWidth()
@@ -163,6 +157,67 @@ private fun CaughtPokemonDetailContent(
             }
         }
     }
+
+    if (showSlotSelection && pokemon != null) {
+        TrainingSlotSelectionDialog(
+            partners = trainingPartners,
+            onSlotSelected = { slot ->
+                scope.launch {
+                    isStartingTraining = true
+                    try {
+                        pokemonDao.setActiveTrainingPartner(pokemon.id, slot)
+                        preferencesManager.markTrainingPartner(slot, pokemon.id)
+                        showSlotSelection = false
+                    } finally {
+                        isStartingTraining = false
+                    }
+                }
+            },
+            onDismiss = { showSlotSelection = false }
+        )
+    }
+}
+
+@Composable
+private fun TrainingSlotSelectionDialog(
+    partners: List<CaughtPokemon>,
+    onSlotSelected: (Int) -> Unit,
+    onDismiss: () -> Unit
+) {
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(text = stringResource(R.string.training_slot_selection_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(AppSizes.spacingMedium)) {
+                for (slot in 1..2) {
+                    val occupant = partners.find { it.trainingSlot == slot }
+                    val occupantSpecies = occupant?.let { Pokemon[it.speciesId] }
+                    val label = if (occupant != null) {
+                        stringResource(
+                            R.string.training_slot_label,
+                            slot,
+                            occupant.nickname ?: occupantSpecies?.name ?: stringResource(R.string.common_unknown),
+                            occupant.level
+                        )
+                    } else {
+                        stringResource(R.string.training_slot_empty, slot)
+                    }
+
+                    Button(
+                        onClick = { onSlotSelected(slot) },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(text = label)
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            androidx.compose.material3.TextButton(onClick = onDismiss) {
+                Text(text = stringResource(R.string.common_cancel))
+            }
+        }
+    )
 }
 
 @Composable
