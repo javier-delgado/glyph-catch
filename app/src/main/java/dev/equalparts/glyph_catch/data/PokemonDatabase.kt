@@ -158,6 +158,9 @@ interface PokemonDao {
     @Query("SELECT COUNT(*) FROM pokedex_records")
     suspend fun getUniqueSpeciesCount(): Int
 
+    @Query("SELECT COUNT(*) FROM pokedex_records WHERE speciesId <= 151")
+    suspend fun getKantoPokedexCount(): Int
+
     @Query("SELECT speciesId FROM pokedex_records ORDER BY speciesId")
     fun watchCaughtSpeciesIds(): Flow<List<Int>>
 

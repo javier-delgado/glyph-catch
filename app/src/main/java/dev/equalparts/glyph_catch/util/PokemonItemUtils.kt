@@ -24,7 +24,7 @@ private fun PokemonSpecies.evolutionTargets(): List<PokemonSpecies> = evolvesTo.
 
 fun findLevelEvolutionTarget(pokemon: CaughtPokemon): PokemonSpecies? {
     val species = Pokemon[pokemon.speciesId] ?: return null
-    return species.evolutionTargets().firstOrNull { candidate ->
+    val validTargets = species.evolutionTargets().filter { candidate ->
         when (val requirement = candidate.evolutionRequirement) {
             is EvolutionRequirement.Level -> pokemon.level >= requirement.level
             is EvolutionRequirement.Happiness -> pokemon.happiness >= 255
@@ -37,6 +37,7 @@ fun findLevelEvolutionTarget(pokemon: CaughtPokemon): PokemonSpecies? {
             else -> false
         }
     }
+    return if (validTargets.isNotEmpty()) validTargets.random() else null
 }
 
 fun findStoneEvolutionTarget(pokemon: CaughtPokemon, stone: Item): PokemonSpecies? {

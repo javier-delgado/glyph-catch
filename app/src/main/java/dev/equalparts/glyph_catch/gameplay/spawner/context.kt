@@ -258,6 +258,7 @@ data class GameplayContext(
         private val dayMillis = 24L * 60 * 60 * 1000
 
         var pokedexCount: Int = 0
+        var kantoPokedexCount: Int = 0
         var currentPartnerDays: Int = 0
 
         /**
@@ -326,6 +327,7 @@ data class GameplayContext(
 
             runBlocking {
                 pokedexCount = dao.getUniqueSpeciesCount()
+                kantoPokedexCount = dao.getKantoPokedexCount()
 
                 val activePartners = dao.getActiveTrainingPartners()
                 if (activePartners.isEmpty()) {
