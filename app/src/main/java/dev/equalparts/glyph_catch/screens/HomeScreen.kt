@@ -41,6 +41,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.equalparts.glyph_catch.AppBadge
 import dev.equalparts.glyph_catch.AppCard
@@ -69,6 +70,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -83,7 +85,8 @@ fun HomeScreen(
     onPokedexClick: () -> Unit,
     onCaughtClick: () -> Unit,
     onBagClick: () -> Unit,
-    onWeatherSettingsClick: () -> Unit
+    onWeatherSettingsClick: () -> Unit,
+    onEggPouchClick: () -> Unit
 ) {
     val recentCatches by db.pokemonDao().watchRecentCatches(5).collectAsStateWithLifecycle(emptyList())
     val uniqueSpecies by db.pokemonDao().watchPokedexProgress().collectAsStateWithLifecycle(0)
@@ -91,6 +94,15 @@ fun HomeScreen(
     val glyphToyHasTicked by glyphToyStatusFlow.collectAsStateWithLifecycle(false)
     val totalCaught by db.pokemonDao().watchTotalCaughtCount().collectAsStateWithLifecycle(0)
     val trainingPartners by db.pokemonDao().watchTrainingPartners().collectAsStateWithLifecycle(emptyList())
+    val activeEggIdFlow = remember(preferencesManager) { preferencesManager.watchActiveEggId() }
+    val activeEggId by activeEggIdFlow.collectAsStateWithLifecycle(null)
+    val activeEgg by remember(activeEggId) {
+        if (activeEggId != null) {
+            db.pokemonDao().watchCaughtPokemon(activeEggId!!)
+        } else {
+            flowOf(null)
+        }
+    }.collectAsStateWithLifecycle(null)
     val superRodIndicatorFlow = remember(preferencesManager) { preferencesManager.watchSuperRodIndicator() }
     val showSuperRodIndicator by superRodIndicatorFlow.collectAsStateWithLifecycle(
         initialValue = preferencesManager.shouldShowSuperRodIndicator()
@@ -166,8 +178,10 @@ fun HomeScreen(
                 Tiles(
                     progressPercentage = progressPercentage,
                     weather = weather,
+                    activeEgg = activeEgg,
                     onPokedexClick = onPokedexClick,
-                    onWeatherClick = onWeatherSettingsClick
+                    onWeatherClick = onWeatherSettingsClick,
+                    onEggPouchClick = onEggPouchClick
                 )
                 Spacer(modifier = Modifier.height(AppSizes.spacingMedium))
                 DaycareSection(
@@ -224,7 +238,14 @@ private fun Header(onSettingsClick: () -> Unit) {
 }
 
 @Composable
-private fun Tiles(progressPercentage: Int, weather: Weather, onPokedexClick: () -> Unit, onWeatherClick: () -> Unit) {
+private fun Tiles(
+    progressPercentage: Int,
+    weather: Weather,
+    activeEgg: CaughtPokemon?,
+    onPokedexClick: () -> Unit,
+    onWeatherClick: () -> Unit,
+    onEggPouchClick: () -> Unit
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(AppSizes.spacingMedium)
@@ -244,6 +265,58 @@ private fun Tiles(progressPercentage: Int, weather: Weather, onPokedexClick: () 
                 .clickable { onWeatherClick() },
             weather = weather
         )
+
+        EggPouchCard(
+            modifier = Modifier
+                .weight(1f)
+                .height(AppSizes.homeTileHeight)
+                .clickable { onEggPouchClick() },
+            activeEgg = activeEgg
+        )
+    }
+}
+
+@Composable
+private fun EggPouchCard(modifier: Modifier = Modifier, activeEgg: CaughtPokemon?) {
+    AppCard(modifier = modifier) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(AppSizes.spacingLarge),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            if (activeEgg == null) {
+                Spacer(modifier = Modifier.weight(1f))
+                Text(
+                    text = stringResource(R.string.home_egg_pouch_empty),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.weight(1f))
+            } else {
+                Spacer(modifier = Modifier.weight(1f))
+                Image(
+                    painter = painterResource(R.drawable.sprite_egg),
+                    contentDescription = stringResource(R.string.caught_pokemon_egg_name),
+                    modifier = Modifier.size(AppSizes.homeWeatherImageSize)
+                )
+                Text(
+                    text = "123", // Stubbed number
+                    fontFamily = ndotFontFamily,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.weight(1f))
+            }
+
+            Text(
+                text = stringResource(R.string.home_egg_pouch_label),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
     }
 }
 
@@ -263,7 +336,8 @@ private fun ProgressCard(modifier: Modifier = Modifier, progressPercentage: Int)
                 text = stringResource(R.string.home_progress_percentage, progressPercentage),
                 fontFamily = ndotFontFamily,
                 style = MaterialTheme.typography.displayMedium,
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface,
+                fontSize = MaterialTheme.typography.headlineMedium.fontSize
             )
 
             Spacer(modifier = Modifier.weight(1f))

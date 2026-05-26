@@ -68,7 +68,12 @@ private data class CaughtActions(
 )
 
 @Composable
-fun CaughtScreen(db: PokemonDatabase, initialSearchQuery: String = "", onPokemonClick: (CaughtPokemon) -> Unit = {}) {
+fun CaughtScreen(
+    db: PokemonDatabase,
+    initialSearchQuery: String = "",
+    initialShowEggsOnly: Boolean = false,
+    onPokemonClick: (CaughtPokemon) -> Unit = {}
+) {
     val pokemonDao = remember(db) { db.pokemonDao() }
     val caughtPokemon by pokemonDao.watchAllCaught().collectAsStateWithLifecycle(emptyList())
     val totalCaught by pokemonDao.watchTotalCaughtCount().collectAsStateWithLifecycle(0)
@@ -77,7 +82,7 @@ fun CaughtScreen(db: PokemonDatabase, initialSearchQuery: String = "", onPokemon
     var searchQuery by rememberSaveable(initialSearchQuery) { mutableStateOf(initialSearchQuery) }
     var showFavoritesOnly by remember { mutableStateOf(false) }
     var showEventOnly by remember { mutableStateOf(false) }
-    var showEggsOnly by remember { mutableStateOf(false) }
+    var showEggsOnly by rememberSaveable(initialShowEggsOnly) { mutableStateOf(initialShowEggsOnly) }
 
     val toggleFavorite: (CaughtPokemon) -> Unit = { pokemon ->
         scope.launch { pokemonDao.updateFavorite(pokemon.id, !pokemon.isFavorite) }

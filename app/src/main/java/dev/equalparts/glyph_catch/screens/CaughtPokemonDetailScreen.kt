@@ -114,6 +114,7 @@ private fun CaughtPokemonDetailContent(
     var isStartingTraining by remember { mutableStateOf(false) }
     var showSlotSelection by remember { mutableStateOf(false) }
     val trainingPartners by pokemonDao.watchTrainingPartners().collectAsStateWithLifecycle(emptyList())
+    val activeEggId by preferencesManager.watchActiveEggId().collectAsStateWithLifecycle(null)
 
     Column(
         modifier = modifier,
@@ -126,6 +127,36 @@ private fun CaughtPokemonDetailContent(
             )
         } else {
             CaughtPokemonSummaryCard(pokemon = pokemon)
+
+            if (pokemon.isEgg) {
+                val isInPouch = activeEggId == pokemon.id
+                Button(
+                    onClick = {
+                        preferencesManager.activeEggId = pokemon.id
+                    },
+                    enabled = !isInPouch,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = if (isInPouch) {
+                            stringResource(R.string.caught_detail_in_egg_pouch)
+                        } else {
+                            stringResource(R.string.caught_detail_put_in_egg_pouch)
+                        }
+                    )
+                }
+
+                if (isInPouch) {
+                    OutlinedButton(
+                        onClick = {
+                            preferencesManager.activeEggId = null
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(text = stringResource(R.string.common_cancel))
+                    }
+                }
+            }
 
             if (!pokemon.isEgg) {
                 Button(

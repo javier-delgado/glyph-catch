@@ -55,6 +55,8 @@
     <string name="home_evolution_congrats_title">Congratulations!</string>
     <string name="home_evolution_congrats_message">Your %1$s evolved into %2$s!</string>
     <string name="home_evolution_close">Close</string>
+    <string name="home_egg_pouch_label">Egg Pouch</string>
+    <string name="home_egg_pouch_empty">-</string>
     <string name="settings_title">SETTINGS</string>
     <string name="settings_graphics_title">Glyph Toy</string>
     <string name="settings_weather_title">Weather</string>
@@ -155,6 +157,8 @@
     <string name="caught_detail_start_training">Train</string>
     <string name="caught_detail_is_training">Training</string>
     <string name="caught_detail_stop_training">Stop training</string>
+    <string name="caught_detail_put_in_egg_pouch">Put in egg pouch</string>
+    <string name="caught_detail_in_egg_pouch">In egg pouch</string>
     <string name="caught_detail_info_encounter">Encounter</string>
     <string name="caught_detail_encounter_special">Special</string>
     <string name="caught_detail_encounter_event">Event</string>
