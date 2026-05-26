@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Star
@@ -32,10 +33,11 @@ import dev.equalparts.glyph_catch.data.Pokemon
 data class PokemonFilterState(
     val searchQuery: String = "",
     val showFavoritesOnly: Boolean = false,
-    val showEventOnly: Boolean = false
+    val showEventOnly: Boolean = false,
+    val showEggsOnly: Boolean = false
 ) {
     val hasActiveFilters: Boolean
-        get() = searchQuery.isNotBlank() || showFavoritesOnly || showEventOnly
+        get() = searchQuery.isNotBlank() || showFavoritesOnly || showEventOnly || showEggsOnly
 }
 
 fun List<CaughtPokemon>.applyFilters(state: PokemonFilterState): List<CaughtPokemon> = filter { pokemon ->
@@ -48,7 +50,8 @@ fun List<CaughtPokemon>.applyFilters(state: PokemonFilterState): List<CaughtPoke
     }
     val matchesFavorite = !state.showFavoritesOnly || pokemon.isFavorite
     val matchesEvent = !state.showEventOnly || pokemon.isSpecialSpawn || pokemon.isConditionalSpawn
-    matchesSearch && matchesFavorite && matchesEvent
+    val matchesEggs = !state.showEggsOnly || pokemon.isEgg
+    matchesSearch && matchesFavorite && matchesEvent && matchesEggs
 }.sortedByDescending { it.caughtAt }
 
 @Composable
@@ -58,6 +61,7 @@ fun PokemonFilterControls(
     onClearSearch: () -> Unit,
     onToggleFavorites: () -> Unit,
     onToggleEvent: () -> Unit,
+    onToggleEggs: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier) {
@@ -74,7 +78,9 @@ fun PokemonFilterControls(
             showFavoritesOnly = state.showFavoritesOnly,
             onToggleFavorites = onToggleFavorites,
             showEventOnly = state.showEventOnly,
-            onToggleEvent = onToggleEvent
+            onToggleEvent = onToggleEvent,
+            showEggsOnly = state.showEggsOnly,
+            onToggleEggs = onToggleEggs
         )
     }
 }
@@ -115,6 +121,8 @@ private fun PokemonFilterChips(
     onToggleFavorites: () -> Unit,
     showEventOnly: Boolean,
     onToggleEvent: () -> Unit,
+    showEggsOnly: Boolean,
+    onToggleEggs: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val chipColors = FilterChipDefaults.filterChipColors(
@@ -139,6 +147,14 @@ private fun PokemonFilterChips(
             icon = Icons.Default.Star,
             selected = showEventOnly,
             onClick = onToggleEvent,
+            colors = chipColors
+        )
+
+        ToggleFilterChip(
+            label = stringResource(R.string.caught_screen_filter_eggs),
+            icon = Icons.Default.AddCircle,
+            selected = showEggsOnly,
+            onClick = onToggleEggs,
             colors = chipColors
         )
     }

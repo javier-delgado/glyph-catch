@@ -50,7 +50,8 @@ data class CaughtPokemon(
     val isConditionalSpawn: Boolean = false,
     @ColumnInfo(defaultValue = "0") val screenOffDurationMinutes: Int = 0,
     @ColumnInfo(defaultValue = "GENDERLESS") val gender: Gender = Gender.GENDERLESS,
-    @ColumnInfo(defaultValue = "0") val happiness: Int = 0
+    @ColumnInfo(defaultValue = "0") val happiness: Int = 0,
+    @ColumnInfo(defaultValue = "0") val isEgg: Boolean = false
 )
 
 /**
@@ -245,7 +246,7 @@ interface ActiveItemDao {
         ActiveItem::class,
         DebugEvent::class
     ],
-    version = 13,
+    version = 14,
     exportSchema = true,
     autoMigrations = [
         AutoMigration(from = 4, to = 5),
@@ -261,6 +262,12 @@ abstract class PokemonDatabase : RoomDatabase() {
     abstract fun debugEventDao(): DebugEventDao
 
     companion object {
+        private val MIGRATION_13_14 = object : Migration(13, 14) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE caught_pokemon ADD COLUMN isEgg INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
         private val MIGRATION_12_13 = object : Migration(12, 13) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE caught_pokemon ADD COLUMN trainingSlot INTEGER NOT NULL DEFAULT 0")
@@ -368,7 +375,7 @@ abstract class PokemonDatabase : RoomDatabase() {
                 PokemonDatabase::class.java,
                 "pokemon.db"
             )
-                .addMigrations(MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13)
+                .addMigrations(MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14)
                 .fallbackToDestructiveMigration(false)
                 .build().also { INSTANCE = it }
         }

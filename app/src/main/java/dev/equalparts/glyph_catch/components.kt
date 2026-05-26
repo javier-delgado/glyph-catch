@@ -189,12 +189,14 @@ fun ItemGlyphCircle(
 @Composable
 fun PokemonSpriteCircle(
     modifier: Modifier = Modifier,
-    pokemonId: Int,
-    pokemonName: String,
+    pokemonId: Int? = null,
+    pokemonName: String? = null,
+    painter: androidx.compose.ui.graphics.painter.Painter? = null,
     backgroundColor: Color = CatchColors.Black,
     showSprite: Boolean = true,
     contentPadding: Dp = AppSizes.spacingTiny,
-    size: Dp? = AppSizes.pokemonImageSize
+    size: Dp? = AppSizes.pokemonImageSize,
+    contentDescription: String? = pokemonName
 ) {
     Box(
         modifier = modifier
@@ -204,14 +206,24 @@ fun PokemonSpriteCircle(
         contentAlignment = Alignment.Center
     ) {
         val context = LocalContext.current
-        val resourceId = remember(pokemonId, context) {
-            PokemonSpriteUtils.getMatrixResourceId(context, pokemonId)
+        val resourceId = if (pokemonId != null) {
+            remember(pokemonId, context) {
+                PokemonSpriteUtils.getMatrixResourceId(context, pokemonId)
+            }
+        } else {
+            0
         }
 
-        if (showSprite && resourceId != 0) {
+        val resolvedPainter = painter ?: if (resourceId != 0) {
+            painterResource(resourceId)
+        } else {
+            null
+        }
+
+        if (showSprite && resolvedPainter != null) {
             Image(
-                painter = painterResource(resourceId),
-                contentDescription = pokemonName,
+                painter = resolvedPainter,
+                contentDescription = contentDescription,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(contentPadding),

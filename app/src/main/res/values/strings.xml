@@ -133,6 +133,7 @@
     <string name="caught_screen_clear_search">Clear search</string>
     <string name="caught_screen_filter_favorites">Favorites</string>
     <string name="caught_screen_filter_event">Event</string>
+    <string name="caught_screen_filter_eggs">Eggs</string>
     <string name="caught_screen_empty_filtered_title">No Pokémon found</string>
     <string name="caught_screen_empty_filtered_subtitle">Try adjusting your filters</string>
     <string name="caught_screen_empty_title">No Pokémon caught yet</string>
@@ -142,6 +143,11 @@
     <string name="caught_detail_info_happiness">Happiness</string>
     <string name="caught_detail_info_egg_groups">Egg Groups</string>
     <string name="caught_detail_info_pokedex">Pokédex No.</string>
+    <string name="caught_pokemon_egg_name">Egg</string>
+    <string name="caught_pokemon_egg_description">This Egg needs a lot more time to hatch.</string>
+    <string name="caught_pokemon_egg_description_2">Wonder what\'s inside? It needs more time, though.</string>
+    <string name="caught_pokemon_egg_description_3">It moves around inside sometimes. It must be close to hatching.</string>
+    <string name="caught_pokemon_egg_description_4">It\'s making sounds inside. It\'s going to hatch soon!</string>
     <string name="caught_detail_info_appeared_on">Appeared</string>
     <string name="caught_detail_info_caught_on">Caught</string>
     <string name="caught_detail_info_screen_off_time">Screen off time ±</string>

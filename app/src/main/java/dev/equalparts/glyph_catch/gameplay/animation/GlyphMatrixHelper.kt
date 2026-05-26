@@ -57,6 +57,13 @@ internal class GlyphMatrixHelper(private val context: Context, val matrixSize: I
         renderBitmapFrame(createCircleBitmap(diameter, color))
 
     /**
+     * Render a drawable to display on the Glyph Matrix.
+     */
+    fun renderDrawableFrame(@DrawableRes resourceId: Int): IntArray {
+        return renderBitmapFrame(loadBitmap(resourceId))
+    }
+
+    /**
      * Render a blank frame to display on the Glyph Matrix.
      */
     fun renderBlankFrame(): IntArray = IntArray(matrixSize * matrixSize)

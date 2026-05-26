@@ -106,6 +106,10 @@ class PreferencesManager(context: Context) {
         get() = prefs.getBoolean(KEY_STARTER_STONE_GIFT, false)
         set(value) = prefs.edit { putBoolean(KEY_STARTER_STONE_GIFT, value) }
 
+    var hasReceivedTogepiEggMilestone: Boolean
+        get() = prefs.getBoolean(KEY_TOGEPI_EGG_MILESTONE, false)
+        set(value) = prefs.edit { putBoolean(KEY_TOGEPI_EGG_MILESTONE, value) }
+
     var isRepelActive: Boolean
         get() = prefs.getBoolean(KEY_REPEL_ACTIVE, false)
         set(value) = prefs.edit { putBoolean(KEY_REPEL_ACTIVE, value) }
@@ -235,6 +239,18 @@ class PreferencesManager(context: Context) {
     var lastSpawnScreenOffMinutes: Int
         get() = prefs.getInt(KEY_LAST_SPAWN_SCREEN_OFF_MINUTES, 0)
         set(value) = prefs.edit { putInt(KEY_LAST_SPAWN_SCREEN_OFF_MINUTES, value.coerceAtLeast(0)) }
+
+    var breedingBeganAt: Long
+        get() = prefs.getLong(KEY_BREEDING_BEGAN_AT, 0L)
+        set(value) = prefs.edit { putLong(KEY_BREEDING_BEGAN_AT, value) }
+
+    var pendingEggSpeciesId: Int
+        get() = prefs.getInt(KEY_PENDING_EGG_SPECIES_ID, 0)
+        set(value) = prefs.edit { putInt(KEY_PENDING_EGG_SPECIES_ID, value) }
+
+    var breedingPartnerIds: Set<String>
+        get() = prefs.getStringSet(KEY_BREEDING_PARTNER_IDS, emptySet()) ?: emptySet()
+        set(value) = prefs.edit { putStringSet(KEY_BREEDING_PARTNER_IDS, value) }
 
     fun watchGlyphToyHasTicked(): Flow<Boolean> = preferenceFlow(
         shouldEmit = { key -> key == KEY_GLYPH_TOY_TICKED },
@@ -411,6 +427,7 @@ class PreferencesManager(context: Context) {
         private const val KEY_REPEL_INDICATOR_DISMISSED = "repel_indicator_dismissed"
         private const val KEY_REPEL_ACTIVE = "repel_active"
         private const val KEY_STARTER_STONE_GIFT = "starter_stone_gift"
+        private const val KEY_TOGEPI_EGG_MILESTONE = "togepi_egg_milestone"
         private const val KEY_SLEEP_BONUS_EXPIRES_AT = "sleep_bonus_expires_at"
         private const val KEY_DEBUG_CAPTURE_ENABLED = "debug_capture_enabled"
         private const val KEY_LAST_SPAWN_SCREEN_OFF_MINUTES = "last_spawn_screen_off_minutes"
@@ -418,6 +435,9 @@ class PreferencesManager(context: Context) {
         private const val KEY_TRAINING_PARTNER_BEGAN_AT = "training_partner_began_at"
         private const val KEY_ACTIVE_TRAINING_PARTNER_ID_2 = "training_partner_id_2"
         private const val KEY_TRAINING_PARTNER_BEGAN_AT_2 = "training_partner_began_at_2"
+        private const val KEY_BREEDING_BEGAN_AT = "breeding_began_at"
+        private const val KEY_PENDING_EGG_SPECIES_ID = "pending_egg_species_id"
+        private const val KEY_BREEDING_PARTNER_IDS = "breeding_partner_ids"
         private const val KEY_PENDING_EVOLUTIONS = "pending_evolutions"
         private const val MINUTES_PER_DAY = 24 * 60
         private const val DEFAULT_BEDTIME_MINUTES = 23 * 60

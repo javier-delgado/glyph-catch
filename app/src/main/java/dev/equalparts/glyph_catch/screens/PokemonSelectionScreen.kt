@@ -52,11 +52,13 @@ fun PokemonSelectionScreen(
     var searchQuery by rememberSaveable { mutableStateOf("") }
     var showFavoritesOnly by remember { mutableStateOf(false) }
     var showEventOnly by remember { mutableStateOf(false) }
+    var showEggsOnly by remember { mutableStateOf(false) }
 
     val filterState = PokemonFilterState(
         searchQuery = searchQuery,
         showFavoritesOnly = showFavoritesOnly,
-        showEventOnly = showEventOnly
+        showEventOnly = showEventOnly,
+        showEggsOnly = showEggsOnly
     )
 
     val allValidTargets by remember(caughtPokemon, item) {
@@ -82,7 +84,8 @@ fun PokemonSelectionScreen(
                 onSearchChange = { searchQuery = it },
                 onClearSearch = { searchQuery = "" },
                 onToggleFavorites = { showFavoritesOnly = !showFavoritesOnly },
-                onToggleEvent = { showEventOnly = !showEventOnly }
+                onToggleEvent = { showEventOnly = !showEventOnly },
+                onToggleEggs = { showEggsOnly = !showEggsOnly }
             )
 
             if (allValidTargets.isEmpty()) {

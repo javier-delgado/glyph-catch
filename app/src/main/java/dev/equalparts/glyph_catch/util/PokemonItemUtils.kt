@@ -55,15 +55,18 @@ fun findTradeEvolutionTarget(pokemon: CaughtPokemon): PokemonSpecies? {
     }
 }
 
-fun canUseItemOn(item: Item, pokemon: CaughtPokemon): Boolean = when (item) {
-    Item.RARE_CANDY -> pokemon.level < MAX_POKEMON_LEVEL
-    Item.SOOTHE_BELL_COOKIE -> pokemon.happiness < 255
-    Item.LINKING_CORD -> findTradeEvolutionTarget(pokemon) != null
-    Item.FIRE_STONE,
-    Item.WATER_STONE,
-    Item.THUNDER_STONE,
-    Item.LEAF_STONE,
-    Item.MOON_STONE,
-    Item.SUN_STONE -> findStoneEvolutionTarget(pokemon, item) != null
-    else -> false
+fun canUseItemOn(item: Item, pokemon: CaughtPokemon): Boolean {
+    if (pokemon.isEgg) return false
+    return when (item) {
+        Item.RARE_CANDY -> pokemon.level < MAX_POKEMON_LEVEL
+        Item.SOOTHE_BELL_COOKIE -> pokemon.happiness < 255
+        Item.LINKING_CORD -> findTradeEvolutionTarget(pokemon) != null
+        Item.FIRE_STONE,
+        Item.WATER_STONE,
+        Item.THUNDER_STONE,
+        Item.LEAF_STONE,
+        Item.MOON_STONE,
+        Item.SUN_STONE -> findStoneEvolutionTarget(pokemon, item) != null
+        else -> false
+    }
 }

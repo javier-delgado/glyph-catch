@@ -85,6 +85,7 @@ private suspend fun applyEvolutionItem(
         newExp = refreshed.exp
     )
     pokemonDao.recordPokedexEntry(target.id)
+    MilestoneHandler.checkMilestones(pokemonDao, preferencesManager)
 
     val updated = pokemonDao.getCaughtPokemon(refreshed.id) ?: refreshed.copy(speciesId = target.id)
     preferencesManager.enqueueEvolutionNotification(refreshed.speciesId, target.id)
@@ -131,6 +132,7 @@ private suspend fun applyRareCandy(
             newExp = newExp
         )
         pokemonDao.recordPokedexEntry(evolution.id)
+        MilestoneHandler.checkMilestones(pokemonDao, preferencesManager)
         val updated = pokemonDao.getCaughtPokemon(refreshed.id)
             ?: refreshed.copy(speciesId = evolution.id, level = newLevel, exp = newExp, happiness = newHappiness)
         preferencesManager.enqueueEvolutionNotification(refreshed.speciesId, evolution.id)

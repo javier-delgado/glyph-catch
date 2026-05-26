@@ -49,6 +49,15 @@ internal class AnimationCoordinator(
     }
 
     /**
+     * Shows a static drawable.
+     */
+    fun showDrawable(resourceId: Int, brightnessFactor: Float?) {
+        val baseFrame = glyphFrameHelper.renderDrawableFrame(resourceId)
+        val frame = brightnessFactor?.let { glyphFrameHelper.adjustBrightness(baseFrame, it) } ?: baseFrame
+        glyphMatrixManagerProvider().setMatrixFrame(frame)
+    }
+
+    /**
      * Played when a new Pokémon appears.
      */
     fun playSpawn(
