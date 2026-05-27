@@ -48,6 +48,8 @@ private data class CaughtPokemonDetailInfo(
     val experience: Int,
     val gender: dev.equalparts.glyph_catch.data.Gender,
     val happiness: Int,
+    val steps: Int,
+    val requiredSteps: Int,
     val eggGroups: List<dev.equalparts.glyph_catch.data.EggGroup>,
     val appearedLabel: String?,
     val caughtLabel: String,
@@ -295,6 +297,8 @@ private fun CaughtPokemonSummaryCard(pokemon: CaughtPokemon) {
                 experience = pokemon.exp,
                 gender = pokemon.gender,
                 happiness = pokemon.happiness,
+                steps = pokemon.steps,
+                requiredSteps = pokemon.requiredSteps,
                 eggGroups = species?.eggGroups ?: emptyList(),
                 appearedLabel = appearedAtFormatted,
                 caughtLabel = caughtAtFormatted,
@@ -343,8 +347,19 @@ private fun CaughtPokemonOverview(pokemon: CaughtPokemon, speciesName: String?, 
         )
 
         if (pokemon.isEgg) {
+            val progress = if (pokemon.requiredSteps > 0) {
+                pokemon.steps.toFloat() / pokemon.requiredSteps
+            } else {
+                0f
+            }
+            val descriptionRes = when {
+                progress < 0.25f -> R.string.caught_pokemon_egg_description_1
+                progress < 0.50f -> R.string.caught_pokemon_egg_description_2
+                progress < 0.75f -> R.string.caught_pokemon_egg_description_3
+                else -> R.string.caught_pokemon_egg_description_4
+            }
             Text(
-                text = stringResource(R.string.caught_pokemon_egg_description),
+                text = stringResource(descriptionRes),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
@@ -397,6 +412,16 @@ private fun CaughtPokemonInfoList(info: CaughtPokemonDetailInfo, isEgg: Boolean 
                 )
             }
 
+        } else {
+            val stepsValue = if (info.requiredSteps > 0) {
+                "${info.steps}/${info.requiredSteps}"
+            } else {
+                info.steps.toString()
+            }
+            InfoRow(
+                label = stringResource(R.string.caught_detail_info_steps),
+                value = stepsValue
+            )
         }
 
         InfoRow(

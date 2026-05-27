@@ -1,6 +1,10 @@
 package dev.equalparts.glyph_catch.gameplay
 
 import android.content.Context
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.os.PowerManager
 import android.text.format.DateFormat
 import android.util.Log
@@ -62,7 +66,7 @@ data class PersistentSpawn(
 /**
  * The interactive Glyph Toy.
  */
-class PokemonGlyphToyService : GlyphMatrixService("Pokemon-Glyph-Toy") {
+class PokemonGlyphToyService : GlyphMatrixService("Pokemon-Glyph-Toy"), SensorEventListener {
 
     private var coroutineScope: CoroutineScope? = null
 
@@ -71,6 +75,7 @@ class PokemonGlyphToyService : GlyphMatrixService("Pokemon-Glyph-Toy") {
     private lateinit var frameFactory: GlyphMatrixHelper
     private lateinit var animationCoordinator: AnimationCoordinator
     private lateinit var breedingController: BreedingController
+    private var sensorManager: SensorManager? = null
 
     private lateinit var gameplayContext: GameplayContext
     private lateinit var spawnEngine: SpawnRulesEngine
@@ -132,6 +137,12 @@ class PokemonGlyphToyService : GlyphMatrixService("Pokemon-Glyph-Toy") {
             WAKE_LOCK_TAG
         )
 
+        sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        val stepSensor = sensorManager?.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
+        if (stepSensor != null) {
+            sensorManager?.registerListener(this, stepSensor, SensorManager.SENSOR_DELAY_NORMAL)
+        }
+
         debugCapture = DebugCaptureManager.shared(applicationContext)
     }
 
@@ -140,6 +151,7 @@ class PokemonGlyphToyService : GlyphMatrixService("Pokemon-Glyph-Toy") {
      */
     override fun onDestroy() {
         super.onDestroy()
+        sensorManager?.unregisterListener(this)
         if (::animationCoordinator.isInitialized) {
             animationCoordinator.cancelActive()
         }
@@ -579,15 +591,21 @@ class PokemonGlyphToyService : GlyphMatrixService("Pokemon-Glyph-Toy") {
         val speciesId = preferencesManager.pendingEggSpeciesId
         Log.d(LOG_TAG, "Catching an egg (Species ID: $speciesId)!")
 
+        val stepsPerKm = 1300
+        val minSteps = 5 * stepsPerKm
+        val maxSteps = 20 * stepsPerKm
+        val requiredSteps = Random.nextInt(minSteps, maxSteps + 1)
+
         try {
             val caughtPokemon = CaughtPokemon(
                 speciesId = speciesId,
                 level = 1,
                 exp = 0,
-                isEgg = true
+                isEgg = true,
+                requiredSteps = requiredSteps
             )
             db.pokemonDao().insert(caughtPokemon)
-            Log.d(LOG_TAG, "Successfully saved egg to database")
+            Log.d(LOG_TAG, "Successfully saved egg to database (Required steps: $requiredSteps)")
 
             preferencesManager.pendingEggSpeciesId = 0
             preferencesManager.breedingBeganAt = System.currentTimeMillis() // Reset timer after acknowledgment
@@ -888,6 +906,33 @@ class PokemonGlyphToyService : GlyphMatrixService("Pokemon-Glyph-Toy") {
         hasSleepBonus = gameplayContext.sleep.hasSleepBonus,
         isBedtime = gameplayContext.sleep.isBedtime
     )
+
+    override fun onSensorChanged(event: SensorEvent?) {
+        if (event?.sensor?.type == Sensor.TYPE_STEP_COUNTER) {
+            val totalSteps = event.values[0].toInt()
+            val previousTotal = preferencesManager.lastStepCount
+
+            if (previousTotal != -1 && totalSteps > previousTotal) {
+                val delta = totalSteps - previousTotal
+                val activeEggId = preferencesManager.activeEggId
+                if (activeEggId != null) {
+                    coroutineScope?.launch {
+                        val hatched = db.pokemonDao().addStepsAndCheckHatch(activeEggId, delta)
+                        if (hatched) {
+                            Log.d(LOG_TAG, "Egg $activeEggId hatched!")
+                            // Optional: notify user or show animation if possible
+                        }
+                    }
+                }
+            }
+
+            preferencesManager.lastStepCount = totalSteps
+        }
+    }
+
+    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
+        // Not needed
+    }
 
     /**
      * Invoked when an unhandled exception occurs in a coroutine.

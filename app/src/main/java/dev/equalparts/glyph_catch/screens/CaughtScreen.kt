@@ -234,8 +234,19 @@ fun CaughtPokemonCard(
                 Spacer(modifier = Modifier.height(AppSizes.spacingTiny))
 
                 if (pokemon.isEgg) {
+                    val progress = if (pokemon.requiredSteps > 0) {
+                        pokemon.steps.toFloat() / pokemon.requiredSteps
+                    } else {
+                        0f
+                    }
+                    val descriptionRes = when {
+                        progress < 0.25f -> R.string.caught_pokemon_egg_description_1
+                        progress < 0.50f -> R.string.caught_pokemon_egg_description_2
+                        progress < 0.75f -> R.string.caught_pokemon_egg_description_3
+                        else -> R.string.caught_pokemon_egg_description_4
+                    }
                     Text(
-                        text = stringResource(R.string.caught_pokemon_egg_description),
+                        text = stringResource(descriptionRes),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

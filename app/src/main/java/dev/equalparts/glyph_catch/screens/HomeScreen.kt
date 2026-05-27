@@ -295,27 +295,30 @@ private fun EggPouchCard(modifier: Modifier = Modifier, activeEgg: CaughtPokemon
                     textAlign = TextAlign.Center
                 )
                 Spacer(modifier = Modifier.weight(1f))
+                Text(
+                    text = stringResource(R.string.home_egg_pouch_label),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             } else {
                 Spacer(modifier = Modifier.weight(1f))
                 Image(
-                    painter = painterResource(R.drawable.sprite_egg),
+                    painter = painterResource(R.drawable.matrix_egg),
                     contentDescription = stringResource(R.string.caught_pokemon_egg_name),
                     modifier = Modifier.size(AppSizes.homeWeatherImageSize)
                 )
-                Text(
-                    text = "123", // Stubbed number
-                    fontFamily = ndotFontFamily,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
                 Spacer(modifier = Modifier.weight(1f))
+                val stepsText = if (activeEgg.requiredSteps > 0) {
+                    "${activeEgg.steps}/${activeEgg.requiredSteps}"
+                } else {
+                    activeEgg.steps.toString()
+                }
+                Text(
+                    text = stepsText,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
-
-            Text(
-                text = stringResource(R.string.home_egg_pouch_label),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
         }
     }
 }

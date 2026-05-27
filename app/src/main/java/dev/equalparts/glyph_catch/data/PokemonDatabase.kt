@@ -51,7 +51,9 @@ data class CaughtPokemon(
     @ColumnInfo(defaultValue = "0") val screenOffDurationMinutes: Int = 0,
     @ColumnInfo(defaultValue = "GENDERLESS") val gender: Gender = Gender.GENDERLESS,
     @ColumnInfo(defaultValue = "0") val happiness: Int = 0,
-    @ColumnInfo(defaultValue = "0") val isEgg: Boolean = false
+    @ColumnInfo(defaultValue = "0") val isEgg: Boolean = false,
+    @ColumnInfo(defaultValue = "0") val steps: Int = 0,
+    @ColumnInfo(defaultValue = "0") val requiredSteps: Int = 0
 )
 
 /**
@@ -192,6 +194,23 @@ interface PokemonDao {
     @Query("UPDATE caught_pokemon SET isFavorite = :isFavorite WHERE id = :pokemonId")
     suspend fun updateFavorite(pokemonId: String, isFavorite: Boolean)
 
+    @Query("UPDATE caught_pokemon SET steps = steps + :amount WHERE id = :pokemonId")
+    suspend fun addSteps(pokemonId: String, amount: Int)
+
+    @Query("UPDATE caught_pokemon SET isEgg = 0 WHERE id = :pokemonId")
+    suspend fun hatchEgg(pokemonId: String)
+
+    @Transaction
+    suspend fun addStepsAndCheckHatch(pokemonId: String, amount: Int): Boolean {
+        addSteps(pokemonId, amount)
+        val p = getCaughtPokemon(pokemonId)
+        if (p != null && p.isEgg && p.steps >= p.requiredSteps && p.requiredSteps > 0) {
+            hatchEgg(pokemonId)
+            return true
+        }
+        return false
+    }
+
     @Query("SELECT COUNT(*) FROM caught_pokemon WHERE level >= :minLevel")
     suspend fun countPokemonAtLevel(minLevel: Int): Int
 }
@@ -246,7 +265,7 @@ interface ActiveItemDao {
         ActiveItem::class,
         DebugEvent::class
     ],
-    version = 14,
+    version = 16,
     exportSchema = true,
     autoMigrations = [
         AutoMigration(from = 4, to = 5),
@@ -262,6 +281,21 @@ abstract class PokemonDatabase : RoomDatabase() {
     abstract fun debugEventDao(): DebugEventDao
 
     companion object {
+        private val MIGRATION_15_16 = object : Migration(15, 16) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE caught_pokemon ADD COLUMN requiredSteps INTEGER NOT NULL DEFAULT 0")
+                // Assign random steps (5-20km, ~1300 steps/km) to existing eggs.
+                // Range: 6500 to 26000 steps. Range size = 19501.
+                db.execSQL("UPDATE caught_pokemon SET requiredSteps = ABS(RANDOM()) % 19501 + 6500 WHERE isEgg = 1")
+            }
+        }
+
+        private val MIGRATION_14_15 = object : Migration(14, 15) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE caught_pokemon ADD COLUMN steps INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
         private val MIGRATION_13_14 = object : Migration(13, 14) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE caught_pokemon ADD COLUMN isEgg INTEGER NOT NULL DEFAULT 0")
@@ -375,7 +409,7 @@ abstract class PokemonDatabase : RoomDatabase() {
                 PokemonDatabase::class.java,
                 "pokemon.db"
             )
-                .addMigrations(MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14)
+                .addMigrations(MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16)
                 .fallbackToDestructiveMigration(false)
                 .build().also { INSTANCE = it }
         }

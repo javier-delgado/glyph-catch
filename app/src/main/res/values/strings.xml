@@ -143,10 +143,11 @@
     <string name="caught_detail_title">POKÉMON DETAILS</string>
     <string name="caught_detail_info_gender">Gender</string>
     <string name="caught_detail_info_happiness">Happiness</string>
+    <string name="caught_detail_info_steps">Steps</string>
     <string name="caught_detail_info_egg_groups">Egg Groups</string>
     <string name="caught_detail_info_pokedex">Pokédex No.</string>
     <string name="caught_pokemon_egg_name">Egg</string>
-    <string name="caught_pokemon_egg_description">This Egg needs a lot more time to hatch.</string>
+    <string name="caught_pokemon_egg_description_1">This Egg needs a lot more time to hatch.</string>
     <string name="caught_pokemon_egg_description_2">Wonder what\'s inside? It needs more time, though.</string>
     <string name="caught_pokemon_egg_description_3">It moves around inside sometimes. It must be close to hatching.</string>
     <string name="caught_pokemon_egg_description_4">It\'s making sounds inside. It\'s going to hatch soon!</string>
