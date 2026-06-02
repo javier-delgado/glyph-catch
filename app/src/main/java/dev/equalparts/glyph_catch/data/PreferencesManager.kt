@@ -232,6 +232,54 @@ class PreferencesManager(context: Context) {
         }
     }
 
+    fun enqueueHatchNotification(speciesId: Int) {
+        synchronized(pendingHatchNotificationsLock) {
+            val current = getPendingHatchNotifications()
+            val updated = mutableListOf(HatchNotification(speciesId)).apply {
+                addAll(current)
+            }
+            persistPendingHatchNotificationsLocked(updated)
+        }
+    }
+
+    fun consumeHatchNotification(): HatchNotification? {
+        synchronized(pendingHatchNotificationsLock) {
+            val current = getPendingHatchNotifications()
+            if (current.isEmpty()) {
+                return null
+            }
+            val remaining = current.drop(1)
+            persistPendingHatchNotificationsLocked(remaining)
+            return current.first()
+        }
+    }
+
+    fun watchPendingHatchNotifications(): Flow<List<HatchNotification>> =
+        pendingHatchNotificationsState.asStateFlow()
+
+    private fun getPendingHatchNotifications(): List<HatchNotification> {
+        val stored = prefs.getString(KEY_PENDING_HATCHES, null) ?: return emptyList()
+        return runCatching {
+            json.decodeFromString(ListSerializer(HatchNotification.serializer()), stored)
+        }.getOrElse { emptyList() }
+    }
+
+    private fun setPendingHatchNotifications(notifications: List<HatchNotification>) {
+        if (notifications.isEmpty()) {
+            prefs.edit { remove(KEY_PENDING_HATCHES) }
+        } else {
+            val encoded = json.encodeToString(ListSerializer(HatchNotification.serializer()), notifications)
+            prefs.edit { putString(KEY_PENDING_HATCHES, encoded) }
+        }
+    }
+
+    private fun persistPendingHatchNotificationsLocked(notifications: List<HatchNotification>) {
+        setPendingHatchNotifications(notifications)
+        if (pendingHatchNotificationsState.value != notifications) {
+            pendingHatchNotificationsState.value = notifications
+        }
+    }
+
     var sleepBonusExpiresAt: Long
         get() = prefs.getLong(KEY_SLEEP_BONUS_EXPIRES_AT, 0L)
         set(value) = prefs.edit { putLong(KEY_SLEEP_BONUS_EXPIRES_AT, value) }
@@ -454,6 +502,7 @@ class PreferencesManager(context: Context) {
         private const val KEY_PENDING_EGG_SPECIES_ID = "pending_egg_species_id"
         private const val KEY_BREEDING_PARTNER_IDS = "breeding_partner_ids"
         private const val KEY_PENDING_EVOLUTIONS = "pending_evolutions"
+        private const val KEY_PENDING_HATCHES = "pending_hatches"
         private const val MINUTES_PER_DAY = 24 * 60
         private const val DEFAULT_BEDTIME_MINUTES = 23 * 60
         private const val SLEEP_BONUS_POLL_ACTIVE_MILLIS = 30_000L
@@ -478,5 +527,8 @@ class PreferencesManager(context: Context) {
 
         private val pendingEvolutionNotificationsState = MutableStateFlow<List<EvolutionNotification>>(emptyList())
         private val pendingEvolutionNotificationsLock = Any()
+
+        private val pendingHatchNotificationsState = MutableStateFlow<List<HatchNotification>>(emptyList())
+        private val pendingHatchNotificationsLock = Any()
     }
 }

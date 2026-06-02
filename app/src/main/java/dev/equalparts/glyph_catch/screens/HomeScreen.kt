@@ -52,6 +52,7 @@ import dev.equalparts.glyph_catch.PokemonSpriteCircle
 import dev.equalparts.glyph_catch.R
 import dev.equalparts.glyph_catch.data.CaughtPokemon
 import dev.equalparts.glyph_catch.data.EvolutionNotification
+import dev.equalparts.glyph_catch.data.HatchNotification
 import dev.equalparts.glyph_catch.data.InventoryItem
 import dev.equalparts.glyph_catch.data.Item
 import dev.equalparts.glyph_catch.data.Pokemon
@@ -117,8 +118,14 @@ fun HomeScreen(
     val evolutionNotificationsFlow =
         remember(preferencesManager) { preferencesManager.watchPendingEvolutionNotifications() }
     val pendingEvolutionNotifications by evolutionNotificationsFlow.collectAsStateWithLifecycle(emptyList())
+
+    val hatchNotificationsFlow =
+        remember(preferencesManager) { preferencesManager.watchPendingHatchNotifications() }
+    val pendingHatchNotifications by hatchNotificationsFlow.collectAsStateWithLifecycle(emptyList())
+
     val scope = rememberCoroutineScope()
     val currentEvolution = pendingEvolutionNotifications.firstOrNull()
+    val currentHatch = pendingHatchNotifications.firstOrNull()
 
     val progressPercentage = remember(uniqueSpecies) { ((uniqueSpecies * 100) / 251).coerceAtMost(100) }
     val dailyTip = remember(tipsProvider) { tipsProvider.getDailyTip() }
@@ -205,6 +212,17 @@ fun HomeScreen(
                 onDismiss = {
                     scope.launch {
                         preferencesManager.consumeEvolutionNotification()
+                    }
+                }
+            )
+        }
+
+        currentHatch?.let { notification ->
+            HatchNotificationOverlay(
+                notification = notification,
+                onDismiss = {
+                    scope.launch {
+                        preferencesManager.consumeHatchNotification()
                     }
                 }
             )
@@ -733,6 +751,76 @@ private fun EvolutionNotificationOverlay(notification: EvolutionNotification, on
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(text = stringResource(R.string.home_evolution_close))
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun HatchNotificationOverlay(notification: HatchNotification, onDismiss: () -> Unit) {
+    val species = Pokemon[notification.speciesId]
+    val dismissState = rememberSwipeToDismissBoxState(
+        positionalThreshold = { distance -> distance * 0.25f },
+        confirmValueChange = { value ->
+            if (value != SwipeToDismissBoxValue.Settled) {
+                onDismiss()
+                true
+            } else {
+                false
+            }
+        }
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = AppSizes.spacingLarge)
+            .padding(top = AppSizes.spacingXLarge),
+        contentAlignment = Alignment.TopCenter
+    ) {
+        SwipeToDismissBox(
+            state = dismissState,
+            enableDismissFromStartToEnd = true,
+            enableDismissFromEndToStart = true,
+            backgroundContent = {}
+        ) {
+            AppCard(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(AppSizes.spacingLarge),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(AppSizes.spacingMedium)
+                ) {
+                    PokemonSpriteCircle(
+                        modifier = Modifier.size(AppSizes.homeTileHeight),
+                        pokemonId = notification.speciesId,
+                        pokemonName = species?.name ?: stringResource(R.string.common_unknown)
+                    )
+
+                    Text(
+                        text = stringResource(R.string.home_hatch_congrats_title),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = stringResource(
+                            R.string.home_hatch_congrats_message,
+                            species?.name ?: stringResource(R.string.common_unknown)
+                        ),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    Button(
+                        onClick = onDismiss,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(text = stringResource(R.string.home_hatch_close))
                     }
                 }
             }

@@ -917,10 +917,11 @@ class PokemonGlyphToyService : GlyphMatrixService("Pokemon-Glyph-Toy"), SensorEv
                 val activeEggId = preferencesManager.activeEggId
                 if (activeEggId != null) {
                     coroutineScope?.launch {
-                        val hatched = db.pokemonDao().addStepsAndCheckHatch(activeEggId, delta)
-                        if (hatched) {
-                            Log.d(LOG_TAG, "Egg $activeEggId hatched!")
-                            // Optional: notify user or show animation if possible
+                        val hatchedSpeciesId = db.pokemonDao().addStepsAndCheckHatch(activeEggId, delta)
+                        if (hatchedSpeciesId != null) {
+                            Log.d(LOG_TAG, "Egg $activeEggId hatched into species $hatchedSpeciesId!")
+                            preferencesManager.activeEggId = null
+                            preferencesManager.enqueueHatchNotification(hatchedSpeciesId)
                         }
                     }
                 }

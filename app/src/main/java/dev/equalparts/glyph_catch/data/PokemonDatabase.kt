@@ -201,14 +201,14 @@ interface PokemonDao {
     suspend fun hatchEgg(pokemonId: String)
 
     @Transaction
-    suspend fun addStepsAndCheckHatch(pokemonId: String, amount: Int): Boolean {
+    suspend fun addStepsAndCheckHatch(pokemonId: String, amount: Int): Int? {
         addSteps(pokemonId, amount)
         val p = getCaughtPokemon(pokemonId)
         if (p != null && p.isEgg && p.steps >= p.requiredSteps && p.requiredSteps > 0) {
             hatchEgg(pokemonId)
-            return true
+            return p.speciesId
         }
-        return false
+        return null
     }
 
     @Query("SELECT COUNT(*) FROM caught_pokemon WHERE level >= :minLevel")

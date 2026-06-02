@@ -55,6 +55,9 @@
     <string name="home_evolution_congrats_title">Congratulations!</string>
     <string name="home_evolution_congrats_message">Your %1$s evolved into %2$s!</string>
     <string name="home_evolution_close">Close</string>
+    <string name="home_hatch_congrats_title">Congratulations!</string>
+    <string name="home_hatch_congrats_message">The egg hatched into %1$s!</string>
+    <string name="home_hatch_close">Close</string>
     <string name="home_egg_pouch_label">Egg Pouch</string>
     <string name="home_egg_pouch_empty">-</string>
     <string name="settings_title">SETTINGS</string>

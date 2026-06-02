@@ -171,7 +171,6 @@ fun createSpawnRules(context: GameplayContext): SpawnRules {
             Pokemon.PIKACHU at 1.0f
             Pokemon.VULPIX at 1.0f
             Pokemon.JIGGLYPUFF at 1.0f
-            Pokemon.TOGETIC at 0.5f
             Pokemon.PONYTA at 1.0f
             Pokemon.SLOWPOKE at 1.0f
             Pokemon.FARFETCHD at 1.0f
@@ -369,7 +368,6 @@ fun createSpawnRules(context: GameplayContext): SpawnRules {
             Pokemon.CLEFABLE at 1.0f during time::night
             Pokemon.JIGGLYPUFF at 2.0f during time::day
             Pokemon.WIGGLYTUFF at 2.0f during time::day
-            Pokemon.TOGETIC at 2.0f
         }
 
         // Snorlax event
