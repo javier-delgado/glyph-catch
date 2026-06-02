@@ -220,6 +220,9 @@ interface InventoryDao {
     @Query("SELECT * FROM inventory WHERE itemId = :itemId")
     suspend fun getItem(itemId: Int): InventoryItem?
 
+    @Query("SELECT * FROM inventory WHERE itemId = :itemId")
+    fun watchItem(itemId: Int): Flow<InventoryItem?>
+
     @Query("SELECT * FROM inventory")
     fun watchAllItems(): Flow<List<InventoryItem>>
 

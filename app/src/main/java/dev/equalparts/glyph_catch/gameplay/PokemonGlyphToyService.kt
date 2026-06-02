@@ -13,7 +13,6 @@ import com.nothing.ketchum.GlyphMatrixFrame
 import com.nothing.ketchum.GlyphMatrixManager
 import com.nothing.ketchum.GlyphMatrixObject
 import dev.equalparts.glyph_catch.data.CaughtPokemon
-import dev.equalparts.glyph_catch.data.EvolutionRequirement
 import dev.equalparts.glyph_catch.data.InventoryItem
 import dev.equalparts.glyph_catch.data.Item
 import dev.equalparts.glyph_catch.data.Pokemon
@@ -702,17 +701,9 @@ class PokemonGlyphToyService : GlyphMatrixService("Pokemon-Glyph-Toy"), SensorEv
             logItemAward(Item.RARE_CANDY, "duplicate", speciesId)
         }
 
-        val allCaught = db.pokemonDao().getAllCaughtList()
-        val hasFriendshipEvolver = allCaught.any { pokemon ->
-            val species = Pokemon[pokemon.speciesId]
-            species?.evolvesTo?.any { targetId ->
-                Pokemon[targetId]?.evolutionRequirement is EvolutionRequirement.Happiness
-            } == true
-        }
-
-        if (hasFriendshipEvolver && Random.nextDouble() < SOOTHE_BELL_COOKIE_DROP_CHANCE) {
+        if (Random.nextDouble() < SOOTHE_BELL_COOKIE_DROP_CHANCE) {
             grantItem(Item.SOOTHE_BELL_COOKIE)
-            logItemAward(Item.SOOTHE_BELL_COOKIE, "friendship_available", speciesId)
+            logItemAward(Item.SOOTHE_BELL_COOKIE, "chance", speciesId)
         }
 
         val totalCaught = db.pokemonDao().getTotalCaughtCount()

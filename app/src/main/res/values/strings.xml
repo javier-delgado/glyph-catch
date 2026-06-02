@@ -218,6 +218,7 @@
     <string name="item_usage_confirm_title">Use %1$s?</string>
     <string name="item_usage_confirm_message">Use %1$s on %2$s? This cannot be undone.</string>
     <string name="item_usage_confirm_button">Use item</string>
+    <string name="item_usage_give_cookie_count">Give Soothe Bell Cookie (%1$d)</string>
     <string name="item_usage_cancel_button">Cancel</string>
     <string name="item_usage_success">Used %1$s!</string>
     <string name="item_usage_success_level_up">%1$s grew to level %2$d!</string>

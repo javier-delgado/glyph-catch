@@ -33,10 +33,12 @@ import dev.equalparts.glyph_catch.PokemonSpriteCircle
 import dev.equalparts.glyph_catch.PokemonTypeChips
 import dev.equalparts.glyph_catch.R
 import dev.equalparts.glyph_catch.data.CaughtPokemon
+import dev.equalparts.glyph_catch.data.Item
 import dev.equalparts.glyph_catch.data.Pokemon
 import dev.equalparts.glyph_catch.data.PokemonDao
 import dev.equalparts.glyph_catch.data.PokemonDatabase
 import dev.equalparts.glyph_catch.data.PreferencesManager
+import dev.equalparts.glyph_catch.util.useItemOnPokemon
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -80,7 +82,8 @@ fun CaughtPokemonDetailScreen(
                 .padding(AppSizes.spacingLarge),
             pokemon = caughtPokemon,
             pokemonDao = pokemonDao,
-            preferencesManager = preferencesManager
+            preferencesManager = preferencesManager,
+            db = db
         )
     }
 }
@@ -110,13 +113,18 @@ private fun CaughtPokemonDetailContent(
     modifier: Modifier,
     pokemon: CaughtPokemon?,
     pokemonDao: PokemonDao,
-    preferencesManager: PreferencesManager
+    preferencesManager: PreferencesManager,
+    db: PokemonDatabase
 ) {
     val scope = rememberCoroutineScope()
     var isStartingTraining by remember { mutableStateOf(false) }
     var showSlotSelection by remember { mutableStateOf(false) }
     val trainingPartners by pokemonDao.watchTrainingPartners().collectAsStateWithLifecycle(emptyList())
     val activeEggId by preferencesManager.watchActiveEggId().collectAsStateWithLifecycle(null)
+    val cookieItem by db.inventoryDao().watchItem(Item.SOOTHE_BELL_COOKIE.ordinal).collectAsStateWithLifecycle(null)
+    val cookieCount = cookieItem?.quantity ?: 0
+    var showCookieConfirmation by remember { mutableStateOf(false) }
+    var isUsingCookie by remember { mutableStateOf(false) }
 
     Column(
         modifier = modifier,
@@ -189,8 +197,70 @@ private fun CaughtPokemonDetailContent(
                         Text(text = stringResource(R.string.caught_detail_stop_training))
                     }
                 }
+
+                OutlinedButton(
+                    onClick = { showCookieConfirmation = true },
+                    enabled = cookieCount > 0 && !isUsingCookie && pokemon.happiness < 255,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    val label = stringResource(R.string.item_usage_give_cookie_count, cookieCount)
+                    Text(text = label)
+                }
             }
         }
+    }
+
+    if (showCookieConfirmation && pokemon != null) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { showCookieConfirmation = false },
+            title = {
+                Text(
+                    text = stringResource(
+                        R.string.item_usage_confirm_title,
+                        stringResource(R.string.item_soothe_bell_cookie_name)
+                    )
+                )
+            },
+            text = {
+                Text(
+                    text = stringResource(
+                        R.string.item_usage_confirm_message,
+                        stringResource(R.string.item_soothe_bell_cookie_name),
+                        pokemon.nickname ?: Pokemon[pokemon.speciesId]?.name
+                        ?: stringResource(R.string.common_unknown)
+                    )
+                )
+            },
+            confirmButton = {
+                androidx.compose.material3.TextButton(
+                    onClick = {
+                        showCookieConfirmation = false
+                        scope.launch {
+                            isUsingCookie = true
+                            try {
+                                useItemOnPokemon(
+                                    db,
+                                    preferencesManager,
+                                    Item.SOOTHE_BELL_COOKIE,
+                                    pokemon.id
+                                )
+                            } finally {
+                                isUsingCookie = false
+                            }
+                        }
+                    }
+                ) {
+                    Text(text = stringResource(R.string.item_usage_confirm_button))
+                }
+            },
+            dismissButton = {
+                androidx.compose.material3.TextButton(onClick = {
+                    showCookieConfirmation = false
+                }) {
+                    Text(text = stringResource(R.string.common_cancel))
+                }
+            }
+        )
     }
 
     if (showSlotSelection && pokemon != null) {
