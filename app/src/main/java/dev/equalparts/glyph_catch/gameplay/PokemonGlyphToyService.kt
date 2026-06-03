@@ -13,6 +13,7 @@ import com.nothing.ketchum.GlyphMatrixFrame
 import com.nothing.ketchum.GlyphMatrixManager
 import com.nothing.ketchum.GlyphMatrixObject
 import dev.equalparts.glyph_catch.data.CaughtPokemon
+import dev.equalparts.glyph_catch.data.EvolutionRequirement
 import dev.equalparts.glyph_catch.data.InventoryItem
 import dev.equalparts.glyph_catch.data.Item
 import dev.equalparts.glyph_catch.data.Pokemon
@@ -588,6 +589,7 @@ class PokemonGlyphToyService : GlyphMatrixService("Pokemon-Glyph-Toy"), SensorEv
      */
     private suspend fun catchEgg() {
         val speciesId = preferencesManager.pendingEggSpeciesId
+        val appearedAt = preferencesManager.pendingEggAppearedAt.takeIf { it > 0L } ?: System.currentTimeMillis()
         Log.d(LOG_TAG, "Catching an egg (Species ID: $speciesId)!")
 
         val stepsPerKm = 1300
@@ -598,6 +600,7 @@ class PokemonGlyphToyService : GlyphMatrixService("Pokemon-Glyph-Toy"), SensorEv
         try {
             val caughtPokemon = CaughtPokemon(
                 speciesId = speciesId,
+                spawnedAt = appearedAt,
                 level = 1,
                 exp = 0,
                 isEgg = true,
@@ -607,6 +610,7 @@ class PokemonGlyphToyService : GlyphMatrixService("Pokemon-Glyph-Toy"), SensorEv
             Log.d(LOG_TAG, "Successfully saved egg to database (Required steps: $requiredSteps)")
 
             preferencesManager.pendingEggSpeciesId = 0
+            preferencesManager.pendingEggAppearedAt = 0L
             preferencesManager.breedingBeganAt = System.currentTimeMillis() // Reset timer after acknowledgment
 
             val snapshot = currentDebugSnapshot()

@@ -109,6 +109,7 @@ class BreedingController(
             if (Random.nextDouble() < perMinuteChance) {
                 val eggSpeciesId = getEggSpeciesId(p1, p2)
                 preferencesManager.pendingEggSpeciesId = eggSpeciesId
+                preferencesManager.pendingEggAppearedAt = System.currentTimeMillis()
                 logger?.d(TAG, "An egg has appeared! Species ID: $eggSpeciesId")
                 return eggSpeciesId
             }

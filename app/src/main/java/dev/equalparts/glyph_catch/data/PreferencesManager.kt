@@ -304,6 +304,10 @@ class PreferencesManager(context: Context) {
         get() = prefs.getInt(KEY_PENDING_EGG_SPECIES_ID, 0)
         set(value) = prefs.edit { putInt(KEY_PENDING_EGG_SPECIES_ID, value) }
 
+    var pendingEggAppearedAt: Long
+        get() = prefs.getLong(KEY_PENDING_EGG_APPEARED_AT, 0L)
+        set(value) = prefs.edit { putLong(KEY_PENDING_EGG_APPEARED_AT, value) }
+
     var breedingPartnerIds: Set<String>
         get() = prefs.getStringSet(KEY_BREEDING_PARTNER_IDS, emptySet()) ?: emptySet()
         set(value) = prefs.edit { putStringSet(KEY_BREEDING_PARTNER_IDS, value) }
@@ -500,6 +504,7 @@ class PreferencesManager(context: Context) {
         private const val KEY_LAST_STEP_COUNT = "last_step_count"
         private const val KEY_BREEDING_BEGAN_AT = "breeding_began_at"
         private const val KEY_PENDING_EGG_SPECIES_ID = "pending_egg_species_id"
+        private const val KEY_PENDING_EGG_APPEARED_AT = "pending_egg_appeared_at"
         private const val KEY_BREEDING_PARTNER_IDS = "breeding_partner_ids"
         private const val KEY_PENDING_EVOLUTIONS = "pending_evolutions"
         private const val KEY_PENDING_HATCHES = "pending_hatches"

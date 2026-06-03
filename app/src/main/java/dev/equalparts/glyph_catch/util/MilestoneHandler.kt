@@ -23,6 +23,7 @@ object MilestoneHandler {
                 if (preferencesManager.pendingEggSpeciesId == 0) {
                     preferencesManager.hasReceivedTogepiEggMilestone = true
                     preferencesManager.pendingEggSpeciesId = Pokemon.TOGEPI.id
+                    preferencesManager.pendingEggAppearedAt = System.currentTimeMillis()
                     Log.d(TAG, "Togepi egg awarded for 20 unique species!")
                 }
             }

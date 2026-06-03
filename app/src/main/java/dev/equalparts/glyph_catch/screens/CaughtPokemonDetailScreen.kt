@@ -1,5 +1,9 @@
 package dev.equalparts.glyph_catch.screens
 
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,9 +23,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.equalparts.glyph_catch.AppCard
 import dev.equalparts.glyph_catch.AppEmptyState
@@ -116,6 +122,7 @@ private fun CaughtPokemonDetailContent(
     preferencesManager: PreferencesManager,
     db: PokemonDatabase
 ) {
+    val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var isStartingTraining by remember { mutableStateOf(false) }
     var showSlotSelection by remember { mutableStateOf(false) }
@@ -125,6 +132,14 @@ private fun CaughtPokemonDetailContent(
     val cookieCount = cookieItem?.quantity ?: 0
     var showCookieConfirmation by remember { mutableStateOf(false) }
     var isUsingCookie by remember { mutableStateOf(false) }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted && pokemon != null) {
+            preferencesManager.activeEggId = pokemon.id
+        }
+    }
 
     Column(
         modifier = modifier,
@@ -142,7 +157,12 @@ private fun CaughtPokemonDetailContent(
                 val isInPouch = activeEggId == pokemon.id
                 Button(
                     onClick = {
-                        preferencesManager.activeEggId = pokemon.id
+                        val permission = Manifest.permission.ACTIVITY_RECOGNITION
+                        if (ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED) {
+                            preferencesManager.activeEggId = pokemon.id
+                        } else {
+                            permissionLauncher.launch(permission)
+                        }
                     },
                     enabled = !isInPouch,
                     modifier = Modifier.fillMaxWidth()
