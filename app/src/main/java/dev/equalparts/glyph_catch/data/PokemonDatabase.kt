@@ -167,6 +167,9 @@ interface PokemonDao {
     @Query("SELECT speciesId FROM pokedex_records ORDER BY speciesId")
     fun watchCaughtSpeciesIds(): Flow<List<Int>>
 
+    @Query("SELECT EXISTS(SELECT 1 FROM caught_pokemon WHERE speciesId = :speciesId)")
+    suspend fun hasInInventory(speciesId: Int): Boolean
+
     @Query("SELECT EXISTS(SELECT 1 FROM pokedex_records WHERE speciesId = :speciesId)")
     suspend fun hasPokedexEntry(speciesId: Int): Boolean
 

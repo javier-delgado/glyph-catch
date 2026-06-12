@@ -275,9 +275,24 @@ class PokemonGlyphToyService : GlyphMatrixService("Pokemon-Glyph-Toy"), SensorEv
         val decision = cadenceController.maybeSpawn(now, spawnContext)
         var spawned = decision.spawn
         if (spawned != null && preferencesManager.isRepelActive) {
-            val alreadyCaught = runBlocking { db.pokemonDao().hasPokedexEntry(spawned!!.pokemon.id) }
+            val species = spawned!!.pokemon
+            val alreadyCaught = runBlocking { db.pokemonDao().hasPokedexEntry(species.id) }
             if (alreadyCaught) {
-                spawned = null
+                // If it's already in the pokedex, we check if it should be repelled.
+                // It's repelled ONLY IF:
+                // 1. We have at least one in the inventory (user's "not currently caught" condition)
+                // 2. ALL of its possible evolutions (recursively) are also in the pokedex.
+                val shouldRepel = runBlocking {
+                    val hasInInventory = db.pokemonDao().hasInInventory(species.id)
+                    if (!hasInInventory) {
+                        false
+                    } else {
+                        allEvolutionsInPokedex(species.id)
+                    }
+                }
+                if (shouldRepel) {
+                    spawned = null
+                }
             }
         }
 
@@ -375,6 +390,21 @@ class PokemonGlyphToyService : GlyphMatrixService("Pokemon-Glyph-Toy"), SensorEv
             previousSpeciesId = species.id,
             newSpeciesId = target.id
         )
+    }
+
+    /**
+     * Recursively checks if all possible evolutions of a Pokémon are in the pokedex.
+     */
+    private suspend fun allEvolutionsInPokedex(speciesId: Int): Boolean {
+        val species = Pokemon[speciesId] ?: return true
+        if (species.evolvesTo.isEmpty()) return true
+
+        for (evolutionId in species.evolvesTo) {
+            val inPokedex = db.pokemonDao().hasPokedexEntry(evolutionId)
+            if (!inPokedex) return false
+            if (!allEvolutionsInPokedex(evolutionId)) return false
+        }
+        return true
     }
 
     /**
