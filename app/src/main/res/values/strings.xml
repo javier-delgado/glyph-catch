@@ -208,7 +208,7 @@
     <string name="item_linking_cord_name">Linking Cord</string>
     <string name="item_linking_cord_description">Evolves certain species of Pokémon.</string>
     <string name="item_repel_name">Repel</string>
-    <string name="item_repel_description">Keeps away wild Pokémon. Does not affect species you haven\'t obtained.</string>
+    <string name="item_repel_description">Keeps away wild Pokémon. Only species you don\'t currently have will appear.</string>
     <string name="item_repel_toggle_label">Use Repel</string>
     <string name="item_repel_toggle_subtitle">Fewer Pokémon will appear</string>
     <string name="item_soothe_bell_cookie_name">Soothe Bell Cookie</string>
