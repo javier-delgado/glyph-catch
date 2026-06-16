@@ -577,15 +577,22 @@ private fun TrainingBanner(partner: CaughtPokemon, onPartnerClick: (CaughtPokemo
         ) {
             PokemonSpriteCircle(
                 pokemonId = partner.speciesId,
-                pokemonName = species?.name ?: stringResource(R.string.common_unknown)
+                pokemonName = species?.name ?: stringResource(R.string.common_unknown),
+                variant = partner.variant
             )
 
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(AppSizes.spacingTiny)
             ) {
+                val name = partner.nickname ?: species?.name ?: stringResource(R.string.common_unknown)
+                val displayName = if (partner.variant != null) {
+                    "$name ${partner.variant.uppercase()}"
+                } else {
+                    name
+                }
                 Text(
-                    text = partner.nickname ?: species?.name ?: stringResource(R.string.common_unknown),
+                    text = displayName,
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -967,13 +974,20 @@ private fun RecentCatchCard(pokemon: CaughtPokemon, referenceTimeMillis: Long, o
                 PokemonSpriteCircle(
                     modifier = Modifier,
                     pokemonId = pokemon.speciesId,
-                    pokemonName = species?.name ?: stringResource(R.string.common_unknown)
+                    pokemonName = species?.name ?: stringResource(R.string.common_unknown),
+                    variant = pokemon.variant
                 )
 
                 Spacer(modifier = Modifier.height(AppSizes.spacingTiny))
 
+                val name = species?.name ?: "???"
+                val displayName = if (pokemon.variant != null) {
+                    "$name ${pokemon.variant.uppercase()}"
+                } else {
+                    name
+                }
                 Text(
-                    text = species?.name ?: "???",
+                    text = displayName,
                     style = MaterialTheme.typography.bodySmall,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurface

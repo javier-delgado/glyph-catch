@@ -53,7 +53,8 @@ data class CaughtPokemon(
     @ColumnInfo(defaultValue = "0") val happiness: Int = 0,
     @ColumnInfo(defaultValue = "0") val isEgg: Boolean = false,
     @ColumnInfo(defaultValue = "0") val steps: Int = 0,
-    @ColumnInfo(defaultValue = "0") val requiredSteps: Int = 0
+    @ColumnInfo(defaultValue = "0") val requiredSteps: Int = 0,
+    val variant: String? = null
 )
 
 /**
@@ -170,6 +171,9 @@ interface PokemonDao {
     @Query("SELECT EXISTS(SELECT 1 FROM caught_pokemon WHERE speciesId = :speciesId)")
     suspend fun hasInInventory(speciesId: Int): Boolean
 
+    @Query("SELECT EXISTS(SELECT 1 FROM caught_pokemon WHERE speciesId = :speciesId AND variant = :variant)")
+    suspend fun hasVariantInInventory(speciesId: Int, variant: String): Boolean
+
     @Query("SELECT EXISTS(SELECT 1 FROM pokedex_records WHERE speciesId = :speciesId)")
     suspend fun hasPokedexEntry(speciesId: Int): Boolean
 
@@ -271,13 +275,14 @@ interface ActiveItemDao {
         ActiveItem::class,
         DebugEvent::class
     ],
-    version = 16,
+    version = 17,
     exportSchema = true,
     autoMigrations = [
         AutoMigration(from = 4, to = 5),
         AutoMigration(from = 5, to = 6),
         AutoMigration(from = 6, to = 7, spec = DebugEventsMigration6To7::class),
-        AutoMigration(from = 7, to = 8)
+        AutoMigration(from = 7, to = 8),
+        AutoMigration(from = 16, to = 17)
     ]
 )
 abstract class PokemonDatabase : RoomDatabase() {

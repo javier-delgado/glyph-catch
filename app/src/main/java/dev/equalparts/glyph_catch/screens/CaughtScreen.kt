@@ -188,7 +188,16 @@ fun CaughtPokemonCard(
     val dateFormat = remember { SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault()) }
     val formattedDate = remember(pokemon.caughtAt) { dateFormat.format(Date(pokemon.caughtAt)) }
 
-    val name = if (pokemon.isEgg) stringResource(R.string.caught_pokemon_egg_name) else (pokemon.nickname ?: species.name)
+    val name = if (pokemon.isEgg) {
+        stringResource(R.string.caught_pokemon_egg_name)
+    } else {
+        val baseName = pokemon.nickname ?: species.name
+        if (pokemon.variant != null) {
+            "$baseName ${pokemon.variant.uppercase()}"
+        } else {
+            baseName
+        }
+    }
 
     AppCard(
         modifier = Modifier.fillMaxWidth(),
@@ -211,7 +220,8 @@ fun CaughtPokemonCard(
             } else {
                 PokemonSpriteCircle(
                     pokemonId = pokemon.speciesId,
-                    pokemonName = species.name
+                    pokemonName = species.name,
+                    variant = pokemon.variant
                 )
             }
 

@@ -60,7 +60,8 @@ data class PersistentSpawn(
     val isSpecial: Boolean,
     val isConditional: Boolean,
     val screenOffDurationMinutes: Int,
-    val spawnedAtMillis: Long = System.currentTimeMillis()
+    val spawnedAtMillis: Long = System.currentTimeMillis(),
+    val variant: String? = null
 )
 
 /**
@@ -274,16 +275,31 @@ class PokemonGlyphToyService : GlyphMatrixService("Pokemon-Glyph-Toy"), SensorEv
 
         val decision = cadenceController.maybeSpawn(now, spawnContext)
         var spawned = decision.spawn
+
+        if (spawned != null && spawned!!.pokemon.id == 201) {
+            val lockTimeMillis = now - (spawned!!.screenOffDurationMinutes * 60 * 1000L)
+            val calendar = Calendar.getInstance().apply { timeInMillis = lockTimeMillis }
+            val lockMinute = calendar.get(Calendar.MINUTE)
+            val variantChar = ('a'.toInt() + (lockMinute % 26)).toChar()
+            spawned = spawned!!.copy(variant = variantChar.toString())
+        }
+
         if (spawned != null && preferencesManager.isRepelActive) {
             val species = spawned!!.pokemon
-            val hasInInventory = runBlocking { db.pokemonDao().hasInInventory(species.id) }
+            val variant = spawned!!.variant
+            val hasInInventory = if (species.id == 201 && variant != null) {
+                runBlocking { db.pokemonDao().hasVariantInInventory(species.id, variant) }
+            } else {
+                runBlocking { db.pokemonDao().hasInInventory(species.id) }
+            }
+
             if (hasInInventory) {
                 spawned = null
             }
         }
 
         if (spawned != null) {
-            addToQueue(spawned)
+            addToQueue(spawned!!)
         }
 
         coroutineScope?.launch {
@@ -492,7 +508,7 @@ class PokemonGlyphToyService : GlyphMatrixService("Pokemon-Glyph-Toy"), SensorEv
      * Show the sprite of a spawned Pokémon on the Glyph Matrix.
      */
     private fun showPokemon(spawn: SpawnResult, brightnessFactor: Float?) {
-        animationCoordinator.showPokemon(spawn.pokemon.id, brightnessFactor)
+        animationCoordinator.showPokemon(spawn.pokemon.id, brightnessFactor, variant = spawn.variant)
         displayedSpawn = spawn
     }
 
@@ -656,7 +672,8 @@ class PokemonGlyphToyService : GlyphMatrixService("Pokemon-Glyph-Toy"), SensorEv
                 spawnPoolName = spawn.pool.name,
                 isSpecialSpawn = spawn.pool.name.contains("special", ignoreCase = true),
                 isConditionalSpawn = spawn.pool.name.contains("event", ignoreCase = true),
-                gender = gender
+                gender = gender,
+                variant = spawn.variant
             )
             db.pokemonDao().insert(caughtPokemon)
             db.pokemonDao().recordPokedexEntry(spawn.pokemon.id)
@@ -808,7 +825,8 @@ class PokemonGlyphToyService : GlyphMatrixService("Pokemon-Glyph-Toy"), SensorEv
                     isSpecial = spawn.pool.isSpecial,
                     isConditional = spawn.pool.isConditional,
                     screenOffDurationMinutes = spawn.screenOffDurationMinutes,
-                    spawnedAtMillis = spawn.spawnedAtMillis
+                    spawnedAtMillis = spawn.spawnedAtMillis,
+                    variant = spawn.variant
                 )
             }
 
@@ -846,7 +864,8 @@ class PokemonGlyphToyService : GlyphMatrixService("Pokemon-Glyph-Toy"), SensorEv
                             pokemon = pokemon,
                             pool = pool,
                             screenOffDurationMinutes = persistent.screenOffDurationMinutes,
-                            spawnedAtMillis = persistent.spawnedAtMillis
+                            spawnedAtMillis = persistent.spawnedAtMillis,
+                            variant = persistent.variant
                         )
                         spawnQueue.add(spawn)
                     }

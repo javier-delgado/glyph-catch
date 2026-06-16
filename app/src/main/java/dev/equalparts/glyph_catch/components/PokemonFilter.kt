@@ -46,7 +46,8 @@ fun List<CaughtPokemon>.applyFilters(state: PokemonFilterState): List<CaughtPoke
         true
     } else {
         (pokemon.nickname?.contains(state.searchQuery, ignoreCase = true) == true) ||
-            (species?.name?.contains(state.searchQuery, ignoreCase = true) == true)
+            (species?.name?.contains(state.searchQuery, ignoreCase = true) == true) ||
+            (pokemon.variant?.contains(state.searchQuery, ignoreCase = true) == true)
     }
     val matchesFavorite = !state.showFavoritesOnly || pokemon.isFavorite
     val matchesEvent = !state.showEventOnly || pokemon.isSpecialSpawn || pokemon.isConditionalSpawn

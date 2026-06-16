@@ -408,7 +408,12 @@ private fun CaughtPokemonOverview(pokemon: CaughtPokemon, speciesName: String?, 
     val name = if (pokemon.isEgg) {
         stringResource(R.string.caught_pokemon_egg_name)
     } else {
-        pokemon.nickname ?: speciesName ?: stringResource(R.string.common_unknown)
+        val baseName = pokemon.nickname ?: speciesName ?: stringResource(R.string.common_unknown)
+        if (pokemon.variant != null) {
+            "$baseName ${pokemon.variant.uppercase()}"
+        } else {
+            baseName
+        }
     }
 
     Column(
@@ -425,7 +430,8 @@ private fun CaughtPokemonOverview(pokemon: CaughtPokemon, speciesName: String?, 
             PokemonSpriteCircle(
                 modifier = Modifier.size(AppSizes.homeTileHeight),
                 pokemonId = pokemon.speciesId,
-                pokemonName = speciesName ?: stringResource(R.string.common_unknown)
+                pokemonName = speciesName ?: stringResource(R.string.common_unknown),
+                variant = pokemon.variant
             )
         }
 

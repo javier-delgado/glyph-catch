@@ -134,6 +134,7 @@ fun PokedexSpriteCircle(
     pokemonId: Int,
     pokemonName: String,
     caught: Boolean,
+    variant: String? = null,
     size: Dp? = AppSizes.pokemonImageSize
 ) {
     val background = if (caught) CatchColors.Black else CatchColors.MediumGray
@@ -143,6 +144,7 @@ fun PokedexSpriteCircle(
         pokemonName = pokemonName,
         backgroundColor = background,
         showSprite = caught,
+        variant = variant,
         size = size
     )
 }
@@ -195,6 +197,7 @@ fun PokemonSpriteCircle(
     backgroundColor: Color = CatchColors.Black,
     showSprite: Boolean = true,
     contentPadding: Dp = AppSizes.spacingTiny,
+    variant: String? = null,
     size: Dp? = AppSizes.pokemonImageSize,
     contentDescription: String? = pokemonName
 ) {
@@ -207,8 +210,8 @@ fun PokemonSpriteCircle(
     ) {
         val context = LocalContext.current
         val resourceId = if (pokemonId != null) {
-            remember(pokemonId, context) {
-                PokemonSpriteUtils.getMatrixResourceId(context, pokemonId)
+            remember(pokemonId, variant, context) {
+                PokemonSpriteUtils.getMatrixResourceId(context, pokemonId, variant)
             }
         } else {
             0
