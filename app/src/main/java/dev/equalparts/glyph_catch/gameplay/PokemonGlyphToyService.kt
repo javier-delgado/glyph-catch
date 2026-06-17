@@ -615,13 +615,20 @@ class PokemonGlyphToyService : GlyphMatrixService("Pokemon-Glyph-Toy"), SensorEv
         val requiredSteps = Random.nextInt(minSteps, maxSteps + 1)
 
         try {
+            val species = Pokemon[speciesId]
+            val gender = when {
+                species == null || species.genderRatio == -1.0 -> dev.equalparts.glyph_catch.data.Gender.GENDERLESS
+                Random.nextDouble() < species.genderRatio -> dev.equalparts.glyph_catch.data.Gender.FEMALE
+                else -> dev.equalparts.glyph_catch.data.Gender.MALE
+            }
             val caughtPokemon = CaughtPokemon(
                 speciesId = speciesId,
                 spawnedAt = appearedAt,
                 level = 1,
                 exp = 0,
                 isEgg = true,
-                requiredSteps = requiredSteps
+                requiredSteps = requiredSteps,
+                gender = gender
             )
             db.pokemonDao().insert(caughtPokemon)
             Log.d(LOG_TAG, "Successfully saved egg to database (Required steps: $requiredSteps)")
@@ -934,6 +941,20 @@ class PokemonGlyphToyService : GlyphMatrixService("Pokemon-Glyph-Toy"), SensorEv
                     coroutineScope?.launch {
                         val hatchedSpeciesId = db.pokemonDao().addStepsAndCheckHatch(activeEggId, delta)
                         if (hatchedSpeciesId != null) {
+                            // Assign gender if it's missing (eggs saved before the fix)
+                            val pokemon = db.pokemonDao().getCaughtPokemon(activeEggId)
+                            if (pokemon != null && pokemon.gender == dev.equalparts.glyph_catch.data.Gender.GENDERLESS) {
+                                val species = Pokemon[hatchedSpeciesId]
+                                if (species != null && species.genderRatio != -1.0) {
+                                    val gender = if (Random.nextDouble() < species.genderRatio) {
+                                        dev.equalparts.glyph_catch.data.Gender.FEMALE
+                                    } else {
+                                        dev.equalparts.glyph_catch.data.Gender.MALE
+                                    }
+                                    db.pokemonDao().updateGender(activeEggId, gender)
+                                }
+                            }
+
                             Log.d(LOG_TAG, "Egg $activeEggId hatched into species $hatchedSpeciesId!")
                             preferencesManager.activeEggId = null
                             preferencesManager.enqueueHatchNotification(hatchedSpeciesId)

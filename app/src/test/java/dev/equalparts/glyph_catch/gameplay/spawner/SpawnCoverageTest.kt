@@ -49,6 +49,10 @@ class SpawnCoverageTest {
         }.map { it.id }.toSet()
 
         val stage1Pokemon = allPokemon.filter { p ->
+            // Togetic is a special case: it evolves from Togepi (an egg baby)
+            // but is not catchable in the wild.
+            if (p.id == Pokemon.TOGETIC.id) return@filter false
+
             val isBaseForm = p.evolutionRequirement == null
             if (isBaseForm) {
                 p.id !in babyIds

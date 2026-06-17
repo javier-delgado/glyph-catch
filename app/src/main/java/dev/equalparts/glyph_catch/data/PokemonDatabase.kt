@@ -207,6 +207,9 @@ interface PokemonDao {
     @Query("UPDATE caught_pokemon SET isEgg = 0 WHERE id = :pokemonId")
     suspend fun hatchEgg(pokemonId: String)
 
+    @Query("UPDATE caught_pokemon SET gender = :gender WHERE id = :pokemonId")
+    suspend fun updateGender(pokemonId: String, gender: Gender)
+
     @Transaction
     suspend fun addStepsAndCheckHatch(pokemonId: String, amount: Int): Int? {
         addSteps(pokemonId, amount)
